@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Search, Edit, Settings, Moon, Sun, LogOut } from 'lucide-react';
+import { Search, Edit, Moon, Sun, LogOut, UserCircle, ShieldCheck } from 'lucide-react';
 import { useChatStore, Chat } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import { StoriesBar } from '../Chat/StoriesBar';
 import { NewChatModal } from '../Chat/NewChatModal';
 import { Avatar } from '../Chat/Avatar';
+import { EditProfileModal } from '../Profile/EditProfileModal';
 import { formatChatTime, getChatName, getChatAvatar, getLastMessagePreview, getUnreadCount } from '../../utils/chatUtils';
 
 interface SidebarProps {
@@ -21,6 +22,7 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
   const [showNewChat, setShowNewChat] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -117,8 +119,24 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
         ))}
       </div>
 
-      {/* Bottom logout */}
+      {/* Bottom menu */}
       <div className="flex-shrink-0 border-t border-tg-divider dark:border-gray-700">
+        <button
+          onClick={() => setShowEditProfile(true)}
+          className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-sm"
+        >
+          <UserCircle className="w-4 h-4" />
+          Edit Profile
+        </button>
+        {(user as any)?.isAdmin && (
+          <button
+            onClick={() => navigate('/admin')}
+            className="flex items-center gap-3 w-full px-4 py-3 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors text-sm"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Admin Panel
+          </button>
+        )}
         <button
           onClick={logout}
           className="flex items-center gap-3 w-full px-4 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm"
@@ -129,6 +147,7 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
       </div>
 
       {showNewChat && <NewChatModal onClose={() => setShowNewChat(false)} />}
+      {showEditProfile && <EditProfileModal onClose={() => setShowEditProfile(false)} />}
     </div>
   );
 }

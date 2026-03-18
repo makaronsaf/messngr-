@@ -25,9 +25,17 @@ import storyRoutes from './routes/stories';
 import searchRoutes from './routes/search';
 import encryptionRoutes from './routes/encryption';
 import notificationRoutes from './routes/notifications';
+import pushRoutes from './routes/push';
+import botRoutes from './routes/bots';
+import pollRoutes from './routes/polls';
+import scheduledRoutes from './routes/scheduled';
+import adminRoutes from './routes/admin';
 
 // Socket handlers
 import { setupSocketIO } from './socket';
+
+// Services
+import { initScheduler } from './services/schedulerService';
 
 const app = Fastify({
   logger: false,
@@ -79,6 +87,11 @@ async function bootstrap() {
   await app.register(searchRoutes, { prefix: '/api/search' });
   await app.register(encryptionRoutes, { prefix: '/api/encryption' });
   await app.register(notificationRoutes, { prefix: '/api/notifications' });
+  await app.register(pushRoutes,         { prefix: '/api/push' });
+  await app.register(botRoutes,          { prefix: '/api/bots' });
+  await app.register(pollRoutes,         { prefix: '/api/polls' });
+  await app.register(scheduledRoutes,    { prefix: '/api/scheduled' });
+  await app.register(adminRoutes,        { prefix: '/api/admin' });
 
   // Health check
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
@@ -95,6 +108,9 @@ async function bootstrap() {
   });
 
   setupSocketIO(io);
+
+  // Start scheduled message processor
+  initScheduler(io);
 
   // Store io instance for use in routes
   app.decorate('io', io);

@@ -5,6 +5,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { MainPage } from './pages/MainPage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
+import { AdminPage } from './pages/AdminPage';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { token } = useAuthStore();
@@ -44,6 +45,14 @@ export default function App() {
         }
       />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
+      <Route
+        path="/admin"
+        element={
+          <RequireAuth>
+            <AdminPage />
+          </RequireAuth>
+        }
+      />
       <Route
         path="/*"
         element={

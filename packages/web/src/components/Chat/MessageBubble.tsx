@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Check, CheckCheck, Trash2, Edit3, Reply, Forward, Timer } from 'lucide-react';
+import { Check, CheckCheck, Trash2, Edit3, Reply, Forward, Timer, CheckCircle2 } from 'lucide-react';
 import { Message, useChatStore } from '../../store/chatStore';
 import { Avatar } from './Avatar';
 import { VoiceMessage } from '../Media/VoiceMessage';
@@ -9,6 +9,7 @@ import { ImageMessage } from '../Media/ImageMessage';
 import { VideoMessage } from '../Media/VideoMessage';
 import { ReactionBar } from './ReactionBar';
 import { EmojiPicker } from './EmojiPicker';
+import { PollMessage } from './PollMessage';
 import { formatMessageTime, formatDuration } from '../../utils/chatUtils';
 import { clsx } from 'clsx';
 
@@ -93,8 +94,14 @@ export function MessageBubble({ message, isOwn, showAvatar, showSenderName, curr
         >
           {/* Sender name (groups) */}
           {showSenderName && !isOwn && (
-            <div className="text-xs font-semibold text-tg-blue mb-1">
+            <div className="flex items-center gap-1 text-xs font-semibold text-tg-blue mb-1">
               {message.sender.displayName}
+              {(message.sender as any).isVerified && (
+                <CheckCircle2 className="w-3 h-3 text-tg-blue flex-shrink-0" />
+              )}
+              {(message.sender as any).isBot && (
+                <span className="bg-tg-blue/10 text-tg-blue text-[9px] px-1 py-0.5 rounded font-medium">BOT</span>
+              )}
             </div>
           )}
 
@@ -149,6 +156,16 @@ export function MessageBubble({ message, isOwn, showAvatar, showSenderName, curr
               url={message.mediaUrl!}
               name={message.mediaType || 'File'}
               size={message.mediaSize}
+            />
+          )}
+
+          {message.type === 'POLL' && (
+            <PollMessage
+              messageId={message.id}
+              pollId={(message as any).poll?.id}
+              question={message.content || undefined}
+              initialPoll={(message as any).poll || null}
+              isOwn={isOwn}
             />
           )}
 

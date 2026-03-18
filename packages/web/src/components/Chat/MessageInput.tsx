@@ -1,12 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Paperclip, Mic, Send, Image, FileText, X, Smile,
-  Video, Square, StopCircle
+  Video, Square, BarChart2, Clock,
 } from 'lucide-react';
 import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../utils/api';
 import { EmojiPicker } from './EmojiPicker';
+import { PollCreate } from './PollCreate';
 
 interface MessageInputProps {
   chatId: string;
@@ -22,6 +23,9 @@ export function MessageInput({ chatId }: MessageInputProps) {
   const [recordingTime, setRecordingTime] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showPollCreate, setShowPollCreate] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState('');
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,9 +54,29 @@ export function MessageInput({ chatId }: MessageInputProps) {
     typingTimeoutRef.current = setTimeout(() => setTyping(chatId, false), 3000);
   };
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     if (!text.trim() || !user) return;
     setTyping(chatId, false);
+
+    // Schedule message if time is set
+    if (showSchedule && scheduledAt) {
+      try {
+        await api.post('/scheduled', {
+          chatId,
+          content: text.trim(),
+          type: 'TEXT',
+          scheduledAt,
+        });
+        setText('');
+        setScheduledAt('');
+        setShowSchedule(false);
+        setReplyingTo(null);
+        textareaRef.current?.focus();
+      } catch (err) {
+        console.error('Schedule failed:', err);
+      }
+      return;
+    }
 
     sendMessage(chatId, {
       type: 'TEXT',
@@ -66,7 +90,7 @@ export function MessageInput({ chatId }: MessageInputProps) {
     setText('');
     setReplyingTo(null);
     textareaRef.current?.focus();
-  }, [text, chatId, user, replyingTo, sendMessage, setReplyingTo, setTyping]);
+  }, [text, chatId, user, replyingTo, sendMessage, setReplyingTo, setTyping, showSchedule, scheduledAt]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -353,6 +377,20 @@ export function MessageInput({ chatId }: MessageInputProps) {
                   <Video className="w-5 h-5 text-tg-red" />
                   <span>Video Message</span>
                 </button>
+                <button
+                  className="flex items-center gap-3 w-full px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
+                  onClick={() => { setShowPollCreate(true); setShowAttach(false); }}
+                >
+                  <BarChart2 className="w-5 h-5 text-purple-500" />
+                  <span>Poll</span>
+                </button>
+                <button
+                  className="flex items-center gap-3 w-full px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
+                  onClick={() => { setShowSchedule(!showSchedule); setShowAttach(false); }}
+                >
+                  <Clock className="w-5 h-5 text-orange-500" />
+                  <span>Schedule Message</span>
+                </button>
               </div>
             </>
           )}
@@ -391,6 +429,24 @@ export function MessageInput({ chatId }: MessageInputProps) {
         )}
       </div>
 
+      {/* Schedule datetime picker */}
+      {showSchedule && (
+        <div className="flex items-center gap-2 px-4 py-2 border-t border-tg-divider dark:border-gray-700 bg-orange-50 dark:bg-orange-900/20">
+          <Clock className="w-4 h-4 text-orange-500 flex-shrink-0" />
+          <span className="text-xs text-orange-700 dark:text-orange-300 flex-shrink-0">Send at:</span>
+          <input
+            type="datetime-local"
+            value={scheduledAt}
+            onChange={(e) => setScheduledAt(e.target.value)}
+            min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
+            className="flex-1 text-xs bg-transparent outline-none text-orange-800 dark:text-orange-200"
+          />
+          <button onClick={() => { setShowSchedule(false); setScheduledAt(''); }} className="text-gray-400 hover:text-gray-600">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -402,6 +458,11 @@ export function MessageInput({ chatId }: MessageInputProps) {
           e.target.value = '';
         }}
       />
+
+      {/* Poll creation modal */}
+      {showPollCreate && (
+        <PollCreate chatId={chatId} onClose={() => setShowPollCreate(false)} />
+      )}
     </div>
   );
 }

@@ -5,8 +5,10 @@ import { authenticate } from '../middleware/auth';
 
 const updateProfileSchema = z.object({
   displayName: z.string().min(1).max(64).optional(),
-  bio: z.string().max(500).optional(),
-  username: z.string().min(3).max(32).regex(/^[a-zA-Z0-9_]+$/).optional(),
+  bio:         z.string().max(500).optional().nullable(),
+  username:    z.string().min(3).max(32).regex(/^[a-zA-Z0-9_]+$/).optional(),
+  avatarUrl:   z.string().url().optional().nullable(),
+  isPublic:    z.boolean().optional(),
 });
 
 export default async function userRoutes(app: FastifyInstance) {
@@ -50,8 +52,36 @@ export default async function userRoutes(app: FastifyInstance) {
     const user = await prisma.user.update({
       where: { id: currentUser.id },
       data: body.data,
-      select: { id: true, username: true, displayName: true, bio: true, avatarUrl: true },
+      select: {
+        id: true, username: true, displayName: true, bio: true,
+        avatarUrl: true, isPublic: true, isVerified: true,
+      },
     });
+
+    return { user };
+  });
+
+  // Public profile by username (no auth required for public profiles)
+  app.get('/profile/:username', async (request, reply) => {
+    const { username } = request.params as { username: string };
+
+    const user = await prisma.user.findUnique({
+      where: { username, deletedAt: null },
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        bio: true,
+        avatarUrl: true,
+        isVerified: true,
+        isBot: true,
+        isPublic: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) return reply.status(404).send({ error: 'User not found' });
+    if (!user.isPublic) return reply.status(403).send({ error: 'Profile is private' });
 
     return { user };
   });

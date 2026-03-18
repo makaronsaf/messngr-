@@ -3,6 +3,32 @@ import { immer } from 'zustand/middleware/immer';
 import { api } from '../utils/api';
 import { socketService } from '../utils/socket';
 
+// Request browser push notification permission and register FCM token if VAPID key is set
+async function registerPushToken() {
+  try {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+
+    // If using Firebase Web Push, the app should handle FCM token retrieval separately.
+    // Here we check for a vapidKey in the env and register a minimal service worker
+    // so the browser can receive web push notifications via standard Push API.
+    const vapidKey = (import.meta as any).env?.VITE_VAPID_PUBLIC_KEY;
+    if (!vapidKey) return;
+
+    const registration = await navigator.serviceWorker.ready;
+    const sub = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: vapidKey,
+    });
+
+    // Send subscription to backend (as fcmToken string representation)
+    await api.post('/push/register', { fcmToken: JSON.stringify(sub) });
+  } catch (_) {
+    // Push notification setup is optional — fail silently
+  }
+}
+
 interface User {
   id: string;
   username: string;
@@ -62,6 +88,7 @@ export const useAuthStore = create<AuthState>()(
 
         api.setToken(token);
         socketService.connect(token);
+        registerPushToken().catch(() => {});
       } catch (err) {
         set((state) => { state.isLoading = false; });
         throw err;
@@ -85,6 +112,7 @@ export const useAuthStore = create<AuthState>()(
 
         api.setToken(token);
         socketService.connect(token);
+        registerPushToken().catch(() => {});
       } catch (err) {
         set((state) => { state.isLoading = false; });
         throw err;
@@ -94,6 +122,7 @@ export const useAuthStore = create<AuthState>()(
     logout: async () => {
       try {
         await api.post('/auth/logout');
+        await api.delete('/push/register');
       } catch {}
       socketService.disconnect();
       localStorage.removeItem('token');

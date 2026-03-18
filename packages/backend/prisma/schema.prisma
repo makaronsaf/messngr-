@@ -20,13 +20,19 @@ model User {
   lastSeen          DateTime?
   isVerified        Boolean   @default(false)
   isBot             Boolean   @default(false)
+  isAdmin           Boolean   @default(false)
+  isPublic          Boolean   @default(true)
   twoFactorEnabled  Boolean   @default(false)
   twoFactorSecret   String?
 
+  // Push notification tokens
+  fcmToken          String?   // Firebase Cloud Messaging (Android/Web)
+  apnsToken         String?   // Apple Push Notification Service (iOS)
+
   // E2E encryption keys
-  identityPublicKey String?   // X3DH identity key (public)
-  signedPreKey      String?   // JSON: {keyId, publicKey, signature}
-  oneTimePreKeys    String[]  // Array of serialized one-time pre-keys
+  identityPublicKey String?
+  signedPreKey      String?
+  oneTimePreKeys    String[]
 
   // OAuth
   googleId          String?   @unique
@@ -49,6 +55,11 @@ model User {
   blockedByUsers    UserBlock[]         @relation("Blocked")
   contacts          Contact[]           @relation("UserContacts")
   contactOf         Contact[]           @relation("ContactUser")
+  bot               Bot?                @relation("BotUser")
+  ownedBots         Bot[]               @relation("BotOwner")
+  scheduledMessages ScheduledMessage[]
+  pollVotes         PollVote[]
+  adminLogs         AdminLog[]          @relation("AdminLogs")
 
   @@map("users")
 }
@@ -83,11 +94,11 @@ model Chat {
   description String?
   avatarUrl   String?
   isPublic    Boolean   @default(false)
-  username    String?   @unique // for channels/public groups
+  username    String?   @unique
 
   // Settings
-  slowMode    Int?      // seconds between messages
-  isVerified  Boolean   @default(false) // verified channel badge
+  slowMode    Int?
+  isVerified  Boolean   @default(false)
 
   // E2E - only for private chats
   encryptionEnabled Boolean @default(false)
@@ -96,18 +107,19 @@ model Chat {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  messages    Message[]
-  members     ChatMember[]
-  calls       Call[]
-  pinnedMessages PinnedMessage[]
+  messages           Message[]
+  members            ChatMember[]
+  calls              Call[]
+  pinnedMessages     PinnedMessage[]
+  scheduledMessages  ScheduledMessage[]
 
   @@map("chats")
 }
 
 enum ChatType {
-  PRIVATE     // 1:1
-  GROUP       // group chat
-  CHANNEL     // broadcast channel
+  PRIVATE
+  GROUP
+  CHANNEL
 }
 
 model ChatMember {
@@ -116,12 +128,10 @@ model ChatMember {
   userId   String
   role     ChatMemberRole  @default(MEMBER)
 
-  // Notification settings
   isMuted         Boolean  @default(false)
   mutedUntil      DateTime?
   isPinned        Boolean  @default(false)
 
-  // Read tracking
   lastReadMessageId String?
   lastReadAt        DateTime?
 
@@ -148,21 +158,19 @@ model Message {
   senderId    String
   type        MessageType @default(TEXT)
 
-  // Content (encrypted for E2E chats)
-  content     String?     // text content (may be encrypted)
-  iv          String?     // AES-GCM IV for encrypted messages
+  content     String?
+  iv          String?
 
   // Media
   mediaUrl    String?
   mediaType   String?
   mediaSize   Int?
-  mediaDuration Int?      // seconds for audio/video
-  mediaThumbnail String?  // base64 thumbnail
+  mediaDuration Int?
+  mediaThumbnail String?
   mediaWidth  Int?
   mediaHeight Int?
 
-  // Voice/Video specific
-  waveform    Float[]     // audio waveform data
+  waveform    Float[]
 
   // Forwarded from
   forwardedFromChatId    String?
@@ -179,14 +187,16 @@ model Message {
   selfDestructAfterRead Boolean @default(false)
   selfDestructSeconds   Int?
 
+  // Scheduled
+  scheduledMessageId String?
+
   // State
   isEdited    Boolean   @default(false)
   editedAt    DateTime?
   isDeleted   Boolean   @default(false)
   deletedAt   DateTime?
-  deletedFor  String[]  // user IDs for "delete for me"
+  deletedFor  String[]
 
-  // Pinned
   isPinned    Boolean   @default(false)
 
   sentAt      DateTime  @default(now())
@@ -197,6 +207,7 @@ model Message {
   reactions   MessageReaction[]
   readBy      MessageRead[]
   pinnedIn    PinnedMessage[]
+  poll        Poll?
 
   @@index([chatId, sentAt])
   @@index([senderId])
@@ -207,7 +218,7 @@ enum MessageType {
   TEXT
   IMAGE
   VIDEO
-  VIDEO_NOTE    // Telegram video circles
+  VIDEO_NOTE
   AUDIO
   VOICE
   FILE
@@ -257,16 +268,120 @@ model PinnedMessage {
   @@map("pinned_messages")
 }
 
+// ─── POLLS ────────────────────────────────────────────────────────────────────
+
+model Poll {
+  id          String    @id @default(uuid())
+  messageId   String    @unique
+  question    String
+  isMultiple  Boolean   @default(false)
+  isAnonymous Boolean   @default(true)
+  isClosed    Boolean   @default(false)
+  closedAt    DateTime?
+  createdAt   DateTime  @default(now())
+
+  message Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  options PollOption[]
+  votes   PollVote[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id     String @id @default(uuid())
+  pollId String
+  text   String
+  order  Int    @default(0)
+
+  poll  Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes PollVote[]
+
+  @@map("poll_options")
+}
+
+model PollVote {
+  pollId   String
+  optionId String
+  userId   String
+  votedAt  DateTime @default(now())
+
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([pollId, userId, optionId])
+  @@map("poll_votes")
+}
+
+// ─── BOTS ─────────────────────────────────────────────────────────────────────
+
+model Bot {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  ownerId     String
+  token       String    @unique
+  webhookUrl  String?
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user  User @relation("BotUser",  fields: [userId],  references: [id], onDelete: Cascade)
+  owner User @relation("BotOwner", fields: [ownerId], references: [id])
+
+  @@map("bots")
+}
+
+// ─── SCHEDULED MESSAGES ───────────────────────────────────────────────────────
+
+model ScheduledMessage {
+  id          String      @id @default(uuid())
+  chatId      String
+  senderId    String
+  type        MessageType @default(TEXT)
+  content     String?
+  mediaUrl    String?
+  mediaType   String?
+  scheduledAt DateTime
+  isSent      Boolean     @default(false)
+  sentAt      DateTime?
+  createdAt   DateTime    @default(now())
+
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([scheduledAt, isSent])
+  @@map("scheduled_messages")
+}
+
+// ─── ADMIN ────────────────────────────────────────────────────────────────────
+
+model AdminLog {
+  id         String   @id @default(uuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  admin User @relation("AdminLogs", fields: [adminId], references: [id])
+
+  @@map("admin_logs")
+}
+
+// ─── STORIES ──────────────────────────────────────────────────────────────────
+
 model Story {
   id          String    @id @default(uuid())
   userId      String
   type        StoryType
   mediaUrl    String
   mediaType   String
-  duration    Int?      // seconds
+  duration    Int?
   caption     String?
   isPrivate   Boolean   @default(false)
-  allowedUserIds String[] // empty = all contacts
+  allowedUserIds String[]
   expiresAt   DateTime
   createdAt   DateTime  @default(now())
 
@@ -301,7 +416,7 @@ model Call {
   status    CallStatus @default(RINGING)
   startedAt DateTime?
   endedAt   DateTime?
-  duration  Int?       // seconds
+  duration  Int?
   createdAt DateTime   @default(now())
 
   chat         Chat              @relation(fields: [chatId], references: [id])
@@ -345,8 +460,8 @@ model Contact {
   isBlocked   Boolean  @default(false)
   createdAt   DateTime @default(now())
 
-  user    User @relation("UserContacts", fields: [userId], references: [id], onDelete: Cascade)
-  contact User @relation("ContactUser", fields: [contactId], references: [id], onDelete: Cascade)
+  user    User @relation("UserContacts", fields: [userId],    references: [id], onDelete: Cascade)
+  contact User @relation("ContactUser",  fields: [contactId], references: [id], onDelete: Cascade)
 
   @@id([userId, contactId])
   @@map("contacts")
@@ -388,14 +503,13 @@ enum NotificationType {
   SYSTEM
 }
 
-// E2E Encryption key bundles
 model KeyBundle {
   id              String   @id @default(uuid())
   userId          String   @unique
   registrationId  Int
-  identityKey     String   // base64 encoded public key
-  signedPreKey    Json     // {keyId, publicKey, signature}
-  oneTimePreKeys  Json[]   // [{keyId, publicKey}]
+  identityKey     String
+  signedPreKey    Json
+  oneTimePreKeys  Json[]
   updatedAt       DateTime @updatedAt
 
   @@map("key_bundles")
@@ -405,7 +519,7 @@ model E2ESession {
   id          String   @id @default(uuid())
   senderId    String
   recipientId String
-  sessionData String   // encrypted session state (Double Ratchet)
+  sessionData String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import mime from 'mime-types';
 import { authenticate } from '../middleware/auth';
 import { logger } from '../utils/logger';
+import { prisma } from '../db/prisma';
 
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;  // 10MB
@@ -128,6 +129,13 @@ export default async function mediaRoutes(app: FastifyInstance) {
         .toFile(avatarPath);
 
       const avatarUrl = `/uploads/avatars/${fileId}.webp`;
+
+      // Persist to user record immediately
+      await prisma.user.update({
+        where: { id: currentUser.id },
+        data: { avatarUrl },
+      });
+
       return { avatarUrl };
     } catch (err) {
       logger.error('Avatar upload failed:', err);
