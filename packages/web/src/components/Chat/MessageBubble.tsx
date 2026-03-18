@@ -219,7 +219,7 @@ export function MessageBubble({ message, isOwn, showAvatar, showSenderName, curr
           isOwn={isOwn}
           onClose={() => setShowActions(false)}
           onReply={() => { setReplyingTo(message); setShowActions(false); }}
-          onDelete={(forAll) => { deleteMessage(message.id, forAll); setShowActions(false); }}
+          onDelete={(forAll: boolean) => { deleteMessage(message.id, forAll); setShowActions(false); }}
           onEdit={() => setShowActions(false)}
           onReact={() => { setShowEmojiPicker(true); setShowActions(false); }}
         />
