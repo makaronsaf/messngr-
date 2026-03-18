@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import { prisma } from '../db/prisma';
 import { authenticate } from '../middleware/auth';
 
@@ -323,5 +324,137 @@ export default async function chatRoutes(app: FastifyInstance) {
     });
 
     return { success: true };
+  });
+
+  // ─── Saved Messages ─────────────────────────────────────────────────────────
+
+  app.get('/saved', { preHandler: authenticate }, async (request) => {
+    const currentUser = (request as any).currentUser;
+
+    // Find or create saved messages chat
+    let chat = await prisma.chat.findFirst({
+      where: {
+        isSavedMessages: true,
+        members: { some: { userId: currentUser.id } },
+      },
+      include: {
+        members: {
+          include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true, status: true } } },
+        },
+      },
+    });
+
+    if (!chat) {
+      chat = await prisma.chat.create({
+        data: {
+          id: uuidv4(),
+          type: 'PRIVATE',
+          name: 'Saved Messages',
+          isSavedMessages: true,
+          members: {
+            create: [{ id: uuidv4(), userId: currentUser.id, role: 'OWNER' }],
+          },
+        },
+        include: {
+          members: {
+            include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true, status: true } } },
+          },
+        },
+      });
+    }
+
+    return { chat };
+  });
+
+  // ─── Invite Links ────────────────────────────────────────────────────────────
+
+  // Generate/get invite link for a chat
+  app.post('/:chatId/invite', { preHandler: authenticate }, async (request, reply) => {
+    const currentUser = (request as any).currentUser;
+    const { chatId } = request.params as { chatId: string };
+
+    const membership = await prisma.chatMember.findUnique({
+      where: { chatId_userId: { chatId, userId: currentUser.id } },
+    });
+    if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+      return reply.status(403).send({ error: 'Permission denied' });
+    }
+
+    const chat = await prisma.chat.findUnique({ where: { id: chatId } });
+    if (!chat) return reply.status(404).send({ error: 'Chat not found' });
+    if (chat.type === 'PRIVATE') return reply.status(400).send({ error: 'Private chats cannot have invite links' });
+
+    // Return existing or generate new token
+    const token = chat.inviteToken || crypto.randomBytes(16).toString('hex');
+    if (!chat.inviteToken) {
+      await prisma.chat.update({ where: { id: chatId }, data: { inviteToken: token } });
+    }
+
+    return { inviteToken: token, inviteUrl: `${process.env.WEB_URL}/invite/${token}` };
+  });
+
+  // Revoke invite link
+  app.delete('/:chatId/invite', { preHandler: authenticate }, async (request, reply) => {
+    const currentUser = (request as any).currentUser;
+    const { chatId } = request.params as { chatId: string };
+
+    const membership = await prisma.chatMember.findUnique({
+      where: { chatId_userId: { chatId, userId: currentUser.id } },
+    });
+    if (!membership || !['OWNER', 'ADMIN'].includes(membership.role)) {
+      return reply.status(403).send({ error: 'Permission denied' });
+    }
+
+    await prisma.chat.update({ where: { id: chatId }, data: { inviteToken: null } });
+    return { success: true };
+  });
+
+  // Preview invite (no auth needed)
+  app.get('/invite/:token', async (request, reply) => {
+    const { token } = request.params as { token: string };
+
+    const chat = await prisma.chat.findFirst({
+      where: { inviteToken: token },
+      select: {
+        id: true, name: true, type: true, avatarUrl: true,
+        isVerified: true, description: true,
+        _count: { select: { members: true } },
+      },
+    });
+
+    if (!chat) return reply.status(404).send({ error: 'Invalid invite link' });
+    return { chat };
+  });
+
+  // Join via invite
+  app.post('/invite/:token/join', { preHandler: authenticate }, async (request, reply) => {
+    const currentUser = (request as any).currentUser;
+    const { token } = request.params as { token: string };
+
+    const chat = await prisma.chat.findFirst({ where: { inviteToken: token } });
+    if (!chat) return reply.status(404).send({ error: 'Invalid invite link' });
+
+    const existing = await prisma.chatMember.findFirst({
+      where: { chatId: chat.id, userId: currentUser.id, leftAt: null },
+    });
+    if (existing) return { chat, alreadyMember: true };
+
+    await prisma.chatMember.upsert({
+      where: { chatId_userId: { chatId: chat.id, userId: currentUser.id } },
+      update: { leftAt: null, role: 'MEMBER' },
+      create: { id: uuidv4(), chatId: chat.id, userId: currentUser.id, role: 'MEMBER' },
+    });
+
+    const fullChat = await prisma.chat.findUnique({
+      where: { id: chat.id },
+      include: {
+        members: {
+          where: { leftAt: null },
+          include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true, status: true } } },
+        },
+      },
+    });
+
+    return reply.status(201).send({ chat: fullChat });
   });
 }

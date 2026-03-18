@@ -11,6 +11,7 @@ import { ReactionBar } from './ReactionBar';
 import { EmojiPicker } from './EmojiPicker';
 import { PollMessage } from './PollMessage';
 import { formatMessageTime, formatDuration } from '../../utils/chatUtils';
+import { renderMarkdown, hasMarkdown } from '../../utils/markdown';
 import { clsx } from 'clsx';
 
 interface MessageBubbleProps {
@@ -121,14 +122,25 @@ export function MessageBubble({ message, isOwn, showAvatar, showSenderName, curr
           )}
 
           {/* Message content by type */}
-          {message.type === 'TEXT' && (
-            <p className="text-[15px] leading-snug whitespace-pre-wrap break-words">
-              {message.content}
-              {message.isEdited && (
-                <span className="text-[10px] text-gray-400 ml-1">(edited)</span>
-              )}
-            </p>
-          )}
+          {message.type === 'TEXT' && (() => {
+            const content = message.content || '';
+            if (hasMarkdown(content)) {
+              return (
+                <div
+                  className="text-[15px] leading-snug break-words markdown-content"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
+                />
+              );
+            }
+            return (
+              <p className="text-[15px] leading-snug whitespace-pre-wrap break-words">
+                {content}
+                {message.isEdited && (
+                  <span className="text-[10px] text-gray-400 ml-1">(edited)</span>
+                )}
+              </p>
+            );
+          })()}
 
           {message.type === 'IMAGE' && (
             <ImageMessage src={message.mediaUrl!} thumbnail={message.mediaThumbnail} width={message.mediaWidth} height={message.mediaHeight} />

@@ -7,6 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PrivacyLevel {
+  EVERYONE
+  CONTACTS
+  NOBODY
+}
+
+enum FolderFilterType {
+  ALL
+  UNREAD
+  CHANNELS
+  GROUPS
+  BOTS
+  PERSONAL
+  CUSTOM
+}
+
 model User {
   id                String    @id @default(uuid())
   username          String    @unique
@@ -25,9 +41,14 @@ model User {
   twoFactorEnabled  Boolean   @default(false)
   twoFactorSecret   String?
 
+  // Privacy settings
+  lastSeenPrivacy     PrivacyLevel @default(EVERYONE)
+  profilePhotoPrivacy PrivacyLevel @default(EVERYONE)
+  allowMessagesFrom   PrivacyLevel @default(EVERYONE)
+
   // Push notification tokens
-  fcmToken          String?   // Firebase Cloud Messaging (Android/Web)
-  apnsToken         String?   // Apple Push Notification Service (iOS)
+  fcmToken          String?
+  apnsToken         String?
 
   // E2E encryption keys
   identityPublicKey String?
@@ -60,6 +81,7 @@ model User {
   scheduledMessages ScheduledMessage[]
   pollVotes         PollVote[]
   adminLogs         AdminLog[]          @relation("AdminLogs")
+  chatFolders       ChatFolder[]
 
   @@map("users")
 }
@@ -88,13 +110,15 @@ model Session {
 }
 
 model Chat {
-  id          String    @id @default(uuid())
-  type        ChatType
-  name        String?
-  description String?
-  avatarUrl   String?
-  isPublic    Boolean   @default(false)
-  username    String?   @unique
+  id              String    @id @default(uuid())
+  type            ChatType
+  name            String?
+  description     String?
+  avatarUrl       String?
+  isPublic        Boolean   @default(false)
+  username        String?   @unique
+  isSavedMessages Boolean   @default(false)
+  inviteToken     String?   @unique
 
   // Settings
   slowMode    Int?
@@ -311,6 +335,24 @@ model PollVote {
 
   @@id([pollId, userId, optionId])
   @@map("poll_votes")
+}
+
+// ─── CHAT FOLDERS ─────────────────────────────────────────────────────────────
+
+model ChatFolder {
+  id         String           @id @default(uuid())
+  userId     String
+  name       String
+  icon       String?
+  order      Int              @default(0)
+  filterType FolderFilterType @default(CUSTOM)
+  chatIds    String[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_folders")
 }
 
 // ─── BOTS ─────────────────────────────────────────────────────────────────────

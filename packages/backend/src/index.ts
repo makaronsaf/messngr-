@@ -30,6 +30,8 @@ import botRoutes from './routes/bots';
 import pollRoutes from './routes/polls';
 import scheduledRoutes from './routes/scheduled';
 import adminRoutes from './routes/admin';
+import folderRoutes from './routes/folders';
+import privacyRoutes from './routes/privacy';
 
 // Socket handlers
 import { setupSocketIO } from './socket';
@@ -92,6 +94,8 @@ async function bootstrap() {
   await app.register(pollRoutes,         { prefix: '/api/polls' });
   await app.register(scheduledRoutes,    { prefix: '/api/scheduled' });
   await app.register(adminRoutes,        { prefix: '/api/admin' });
+  await app.register(folderRoutes,       { prefix: '/api/folders' });
+  await app.register(privacyRoutes,      { prefix: '/api/privacy' });
 
   // Health check
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));

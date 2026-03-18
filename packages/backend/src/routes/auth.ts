@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';
+import speakeasy from 'speakeasy';
 import { prisma } from '../db/prisma';
 import { redis } from '../db/redis';
 import { authenticate } from '../middleware/auth';
@@ -98,6 +99,18 @@ export default async function authRoutes(app: FastifyInstance) {
     const sessionToken = uuidv4();
     const token = await reply.jwtSign({ userId: user.id, sessionToken });
     await redis.storeSession(sessionToken, user.id, 7 * 24 * 3600);
+
+    // Persist session in DB for session management
+    await prisma.session.create({
+      data: {
+        id: sessionToken,
+        userId: user.id,
+        token: sessionToken,
+        deviceInfo: deviceInfo || (request.headers['user-agent'] || '').substring(0, 200),
+        ipAddress: request.ip,
+        expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000),
+      },
+    }).catch(() => {}); // non-blocking
 
     // Update last seen
     await prisma.user.update({
@@ -266,5 +279,157 @@ export default async function authRoutes(app: FastifyInstance) {
     const token = await reply.jwtSign({ userId: currentUser.id, sessionToken });
     await redis.storeSession(sessionToken, currentUser.id, 7 * 24 * 3600);
     return { token };
+  });
+
+  // ─── Sessions ──────────────────────────────────────────────────────────────
+
+  // List active sessions
+  app.get('/sessions', { preHandler: authenticate }, async (request) => {
+    const currentUser = (request as any).currentUser;
+
+    const sessions = await prisma.session.findMany({
+      where: {
+        userId: currentUser.id,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { lastActiveAt: 'desc' },
+      select: {
+        id: true, deviceInfo: true, ipAddress: true,
+        createdAt: true, lastActiveAt: true,
+      },
+    });
+
+    const currentPayload = (request as any).user as { sessionToken?: string };
+    const currentSession = sessions.find(
+      (s) => s.id === currentPayload?.sessionToken
+    );
+
+    return {
+      sessions: sessions.map((s) => ({
+        ...s,
+        isCurrent: s.id === currentPayload?.sessionToken,
+      })),
+    };
+  });
+
+  // Revoke a specific session
+  app.delete('/sessions/:sessionId', { preHandler: authenticate }, async (request, reply) => {
+    const currentUser = (request as any).currentUser;
+    const { sessionId } = request.params as { sessionId: string };
+
+    const session = await prisma.session.findFirst({
+      where: { id: sessionId, userId: currentUser.id },
+    });
+    if (!session) return reply.status(404).send({ error: 'Session not found' });
+
+    await prisma.session.delete({ where: { id: sessionId } });
+    await redis.deleteSession(sessionId);
+
+    return { success: true };
+  });
+
+  // Revoke all other sessions
+  app.delete('/sessions', { preHandler: authenticate }, async (request) => {
+    const currentUser = (request as any).currentUser;
+    const currentPayload = (request as any).user as { sessionToken?: string };
+
+    const others = await prisma.session.findMany({
+      where: {
+        userId: currentUser.id,
+        NOT: { id: currentPayload?.sessionToken || '' },
+      },
+      select: { id: true },
+    });
+
+    for (const s of others) {
+      await redis.deleteSession(s.id);
+    }
+
+    await prisma.session.deleteMany({
+      where: {
+        userId: currentUser.id,
+        NOT: { id: currentPayload?.sessionToken || '' },
+      },
+    });
+
+    return { success: true };
+  });
+
+  // ─── Two-Factor Auth ────────────────────────────────────────────────────────
+
+  // Generate 2FA secret and return QR code URI
+  app.post('/2fa/setup', { preHandler: authenticate }, async (request) => {
+    const currentUser = (request as any).currentUser;
+
+    const secret = speakeasy.generateSecret({
+      name: `Messngr (${currentUser.username})`,
+      length: 20,
+    });
+
+    // Store temp secret in Redis for 10 minutes
+    await redis.client.set(
+      `2fa_setup:${currentUser.id}`,
+      secret.base32,
+      'EX', 600
+    );
+
+    return {
+      secret: secret.base32,
+      otpauthUrl: secret.otpauth_url,
+    };
+  });
+
+  // Verify TOTP code and enable 2FA
+  app.post('/2fa/enable', { preHandler: authenticate }, async (request, reply) => {
+    const currentUser = (request as any).currentUser;
+    const { code } = request.body as { code: string };
+
+    const tempSecret = await redis.client.get(`2fa_setup:${currentUser.id}`);
+    if (!tempSecret) {
+      return reply.status(400).send({ error: 'Setup session expired. Start again.' });
+    }
+
+    const valid = speakeasy.totp.verify({
+      secret: tempSecret,
+      encoding: 'base32',
+      token: code,
+      window: 1,
+    });
+
+    if (!valid) return reply.status(400).send({ error: 'Invalid code' });
+
+    await prisma.user.update({
+      where: { id: currentUser.id },
+      data: { twoFactorSecret: tempSecret, twoFactorEnabled: true },
+    });
+
+    await redis.client.del(`2fa_setup:${currentUser.id}`);
+
+    return { success: true };
+  });
+
+  // Disable 2FA
+  app.delete('/2fa', { preHandler: authenticate }, async (request, reply) => {
+    const currentUser = (request as any).currentUser;
+    const { code } = request.body as { code: string };
+
+    const user = await prisma.user.findUnique({ where: { id: currentUser.id } });
+    if (!user?.twoFactorSecret) return reply.status(400).send({ error: '2FA not enabled' });
+
+    const valid = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: code,
+      window: 1,
+    });
+
+    if (!valid) return reply.status(400).send({ error: 'Invalid code' });
+
+    await prisma.user.update({
+      where: { id: currentUser.id },
+      data: { twoFactorSecret: null, twoFactorEnabled: false },
+    });
+
+    return { success: true };
   });
 }

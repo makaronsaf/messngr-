@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { ArrowLeft, Phone, Video, Search, MoreVertical, Lock } from 'lucide-react';
+import { ArrowLeft, Phone, Video, Search, MoreVertical, Lock, Bookmark } from 'lucide-react';
 import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import { useCallStore } from '../../store/callStore';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { Avatar } from './Avatar';
+import { PinnedMessageBanner } from './PinnedMessageBanner';
 import { getChatName, getChatAvatar } from '../../utils/chatUtils';
 import { IncomingCallModal } from '../Calls/IncomingCallModal';
 
@@ -105,6 +106,24 @@ export function ChatWindow({ onBack }: ChatWindowProps) {
           </button>
         </div>
       </div>
+
+      {/* Pinned messages banner */}
+      {activeChat.pinnedMessages && activeChat.pinnedMessages.length > 0 && (
+        <PinnedMessageBanner
+          pinnedMessages={activeChat.pinnedMessages}
+          onScrollTo={(messageId) => {
+            document.getElementById(`msg-${messageId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
+        />
+      )}
+
+      {/* Saved Messages label */}
+      {(activeChat as any).isSavedMessages && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-tg-blue/5 border-b border-tg-divider dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+          <Bookmark className="w-3.5 h-3.5 text-tg-blue" />
+          Your private space — save messages, links, and notes here
+        </div>
+      )}
 
       {/* Messages */}
       <MessageList chatId={activeChat.id} currentUserId={user.id} />

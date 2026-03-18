@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Search, Edit, Moon, Sun, LogOut, UserCircle, ShieldCheck } from 'lucide-react';
+import { Search, Edit, Moon, Sun, LogOut, UserCircle, ShieldCheck, Settings, Bookmark } from 'lucide-react';
 import { useChatStore, Chat } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import { StoriesBar } from '../Chat/StoriesBar';
 import { NewChatModal } from '../Chat/NewChatModal';
 import { Avatar } from '../Chat/Avatar';
 import { EditProfileModal } from '../Profile/EditProfileModal';
+import { SettingsModal } from '../Settings/SettingsModal';
 import { formatChatTime, getChatName, getChatAvatar, getLastMessagePreview, getUnreadCount } from '../../utils/chatUtils';
+import { api } from '../../utils/api';
 
 interface SidebarProps {
   onChatSelect?: () => void;
 }
+
+type FolderTab = 'all' | 'unread' | 'groups' | 'channels';
 
 export function Sidebar({ onChatSelect }: SidebarProps) {
   const navigate = useNavigate();
@@ -21,16 +25,32 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
   const [search, setSearch] = useState('');
   const [showNewChat, setShowNewChat] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState<FolderTab>('all');
+  const [savedChatId, setSavedChatId] = useState<string | null>(null);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
+  // Preload saved messages chat id
+  useEffect(() => {
+    api.get('/chats/saved').then((res) => {
+      setSavedChatId(res.data.id);
+    }).catch(() => {});
+  }, []);
+
+  const filterByTab = (chat: Chat): boolean => {
+    if (activeTab === 'unread') return getUnreadCount(chat) > 0;
+    if (activeTab === 'groups') return chat.type === 'GROUP';
+    if (activeTab === 'channels') return chat.type === 'CHANNEL';
+    return true;
+  };
+
   const filteredChats = chats.filter((chat) => {
     const name = getChatName(chat, user?.id || '').toLowerCase();
-    return name.includes(search.toLowerCase());
+    return name.includes(search.toLowerCase()) && filterByTab(chat);
   });
 
   const handleChatSelect = async (chatId: string) => {
@@ -39,13 +59,31 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
     onChatSelect?.();
   };
 
+  const openSavedMessages = async () => {
+    try {
+      const res = await api.get('/chats/saved');
+      const id = res.data.id;
+      setSavedChatId(id);
+      await selectChat(id);
+      navigate(`/chat/${id}`);
+      onChatSelect?.();
+    } catch {}
+  };
+
+  const tabs: { key: FolderTab; label: string }[] = [
+    { key: 'all', label: 'All' },
+    { key: 'unread', label: 'Unread' },
+    { key: 'groups', label: 'Groups' },
+    { key: 'channels', label: 'Channels' },
+  ];
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 w-full">
       {/* Header */}
       <div className="tg-header flex-shrink-0 justify-between dark:border-gray-700">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setShowMenu(!showMenu)}
+            onClick={() => setShowSettings(true)}
             className="relative"
           >
             <Avatar
@@ -91,11 +129,50 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
         </div>
       </div>
 
+      {/* Folder tabs */}
+      <div className="flex-shrink-0 overflow-x-auto">
+        <div className="flex px-3 pb-2 gap-2 min-w-max">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                activeTab === tab.key
+                  ? 'bg-tg-blue text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Stories */}
       <StoriesBar />
 
       {/* Chats list */}
       <div className="flex-1 overflow-y-auto">
+        {/* Saved Messages pinned entry */}
+        {activeTab === 'all' && !search && (
+          <button
+            onClick={openSavedMessages}
+            className={`chat-item dark:hover:bg-gray-700 w-full text-left ${savedChatId === activeChatId ? 'bg-tg-blue/10 dark:bg-tg-blue/20' : ''}`}
+          >
+            <div className="w-[52px] h-[52px] rounded-full bg-tg-blue flex items-center justify-center flex-shrink-0">
+              <Bookmark className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className={`font-medium text-[15px] ${savedChatId === activeChatId ? 'text-tg-blue' : 'text-gray-900 dark:text-white'}`}>
+                Saved Messages
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                Your private space
+              </div>
+            </div>
+          </button>
+        )}
+
         {isLoadingChats && (
           <div className="flex items-center justify-center py-8">
             <div className="w-6 h-6 border-2 border-tg-blue/30 border-t-tg-blue rounded-full animate-spin" />
@@ -104,7 +181,7 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
 
         {!isLoadingChats && filteredChats.length === 0 && (
           <div className="text-center py-12 text-gray-400 text-sm">
-            {search ? 'No chats found' : 'No chats yet'}
+            {search ? 'No chats found' : activeTab !== 'all' ? `No ${activeTab} chats` : 'No chats yet'}
           </div>
         )}
 
@@ -128,6 +205,13 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
           <UserCircle className="w-4 h-4" />
           Edit Profile
         </button>
+        <button
+          onClick={() => setShowSettings(true)}
+          className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-sm"
+        >
+          <Settings className="w-4 h-4" />
+          Settings
+        </button>
         {(user as any)?.isAdmin && (
           <button
             onClick={() => navigate('/admin')}
@@ -148,6 +232,7 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
 
       {showNewChat && <NewChatModal onClose={() => setShowNewChat(false)} />}
       {showEditProfile && <EditProfileModal onClose={() => setShowEditProfile(false)} />}
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </div>
   );
 }
