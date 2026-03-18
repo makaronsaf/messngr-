@@ -10,9 +10,9 @@ interface PrivacySettings {
 }
 
 const options: { value: PrivacyLevel; label: string; description: string }[] = [
-  { value: 'EVERYONE', label: 'Everyone', description: 'All users' },
-  { value: 'CONTACTS', label: 'My Contacts', description: 'Only people in your contacts' },
-  { value: 'NOBODY', label: 'Nobody', description: 'Completely private' },
+  { value: 'EVERYONE', label: 'Все', description: 'Любые пользователи' },
+  { value: 'CONTACTS', label: 'Мои контакты', description: 'Только люди из ваших контактов' },
+  { value: 'NOBODY', label: 'Никто', description: 'Полностью скрыто' },
 ];
 
 function PrivacySelector({
@@ -84,26 +84,26 @@ export function PrivacyPanel() {
     <div className="p-4 space-y-5">
       {saved && (
         <div className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-xs text-center py-2 rounded-xl">
-          Settings saved
+          Настройки сохранены
         </div>
       )}
 
       <PrivacySelector
-        label="Last Seen & Online"
+        label="Последний визит и «в сети»"
         value={settings.lastSeenPrivacy}
         onChange={(v) => update('lastSeenPrivacy', v)}
         disabled={saving}
       />
 
       <PrivacySelector
-        label="Profile Photo"
+        label="Фото профиля"
         value={settings.profilePhotoPrivacy}
         onChange={(v) => update('profilePhotoPrivacy', v)}
         disabled={saving}
       />
 
       <PrivacySelector
-        label="Who can message me"
+        label="Кто может писать мне"
         value={settings.allowMessagesFrom}
         onChange={(v) => update('allowMessagesFrom', v)}
         disabled={saving}

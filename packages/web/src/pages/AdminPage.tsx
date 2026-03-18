@@ -21,7 +21,7 @@ export function AdminPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center text-gray-500">
           <ShieldCheck className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>Access denied</p>
+          <p>Доступ запрещён</p>
         </div>
       </div>
     );
@@ -39,17 +39,17 @@ export function AdminPage() {
         </button>
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-5 h-5 text-tg-blue" />
-          <h1 className="font-semibold text-gray-900 dark:text-white">Admin Panel</h1>
+          <h1 className="font-semibold text-gray-900 dark:text-white">Панель администратора</h1>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 overflow-x-auto">
         {([
-          { key: 'dashboard', icon: Activity,      label: 'Dashboard' },
-          { key: 'users',     icon: Users,          label: 'Users' },
-          { key: 'chats',     icon: MessageSquare,  label: 'Chats' },
-          { key: 'logs',      icon: BarChart2,      label: 'Logs' },
+          { key: 'dashboard', icon: Activity,      label: 'Обзор' },
+          { key: 'users',     icon: Users,          label: 'Пользователи' },
+          { key: 'chats',     icon: MessageSquare,  label: 'Чаты' },
+          { key: 'logs',      icon: BarChart2,      label: 'Журнал' },
         ] as const).map(({ key, icon: Icon, label }) => (
           <button
             key={key}
@@ -98,18 +98,18 @@ function DashboardTab() {
     <div className="p-4 md:p-6 space-y-6">
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <StatCard label="Total Users"    value={stats.totalUsers}      icon="👤" />
-        <StatCard label="Online Now"     value={stats.activeUsers}     icon="🟢" color="green" />
-        <StatCard label="Total Chats"    value={stats.totalChats}      icon="💬" />
-        <StatCard label="Total Messages" value={stats.totalMessages}   icon="📨" />
-        <StatCard label="New Today"      value={stats.newUsersToday}   icon="🆕" color="blue" />
-        <StatCard label="Msgs Today"     value={stats.newMessagesToday} icon="📬" color="blue" />
+        <StatCard label="Пользователей"    value={stats.totalUsers}      icon="👤" />
+        <StatCard label="Онлайн сейчас"   value={stats.activeUsers}     icon="🟢" color="green" />
+        <StatCard label="Всего чатов"     value={stats.totalChats}      icon="💬" />
+        <StatCard label="Всего сообщений" value={stats.totalMessages}   icon="📨" />
+        <StatCard label="Новых сегодня"   value={stats.newUsersToday}   icon="🆕" color="blue" />
+        <StatCard label="Сообщений сегодня" value={stats.newMessagesToday} icon="📬" color="blue" />
       </div>
 
       {/* Chart */}
       {stats.msgsByDay?.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm">
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Messages (last 7 days)</h3>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Сообщения (последние 7 дней)</h3>
           <MiniBarChart data={stats.msgsByDay} />
         </div>
       )}
@@ -141,7 +141,7 @@ function MiniBarChart({ data }: { data: { day: string; count: number }[] }) {
             className="w-full bg-tg-blue/70 rounded-t"
             style={{ height: `${(d.count / max) * 64}px`, minHeight: d.count > 0 ? '2px' : '0' }}
           />
-          <span className="text-[9px] text-gray-400">{new Date(d.day).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>
+          <span className="text-[9px] text-gray-400">{new Date(d.day).toLocaleDateString('ru', { month: 'short', day: 'numeric' })}</span>
         </div>
       ))}
     </div>
@@ -190,7 +190,7 @@ function UsersTab() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && load(1, search)}
-          placeholder="Search by name, username, email..."
+          placeholder="Поиск по имени, нику, email..."
           className="w-full bg-white dark:bg-gray-800 dark:text-white rounded-xl pl-9 pr-4 py-2.5 outline-none text-sm border border-gray-200 dark:border-gray-700"
         />
       </div>
@@ -204,10 +204,10 @@ function UsersTab() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
-                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">User</th>
+                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Пользователь</th>
                 <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium hidden md:table-cell">Email</th>
-                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Msgs</th>
-                <th className="text-right px-4 py-2.5 text-xs text-gray-500 font-medium">Actions</th>
+                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Сообщ.</th>
+                <th className="text-right px-4 py-2.5 text-xs text-gray-500 font-medium">Действия</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -232,14 +232,14 @@ function UsersTab() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleVerify(u.id, !u.isVerified)}
-                        title={u.isVerified ? 'Unverify' : 'Verify'}
+                        title={u.isVerified ? 'Снять верификацию' : 'Верифицировать'}
                         className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-tg-blue transition-colors"
                       >
                         <CheckCircle2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleBan(u.id, !u.deletedAt)}
-                        title={u.deletedAt ? 'Unban' : 'Ban'}
+                        title={u.deletedAt ? 'Разблокировать' : 'Заблокировать'}
                         className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 hover:text-red-500 transition-colors"
                       >
                         {u.deletedAt ? <CheckCircle2 className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
@@ -256,10 +256,10 @@ function UsersTab() {
       {/* Pagination */}
       {total > 30 && (
         <div className="flex items-center justify-between text-sm text-gray-500">
-          <span>{total} total users</span>
+          <span>{total} пользователей</span>
           <div className="flex gap-2">
-            <button disabled={page <= 1} onClick={() => load(page - 1)} className="px-3 py-1 rounded-lg border disabled:opacity-40">Prev</button>
-            <button disabled={page * 30 >= total} onClick={() => load(page + 1)} className="px-3 py-1 rounded-lg border disabled:opacity-40">Next</button>
+            <button disabled={page <= 1} onClick={() => load(page - 1)} className="px-3 py-1 rounded-lg border disabled:opacity-40">Назад</button>
+            <button disabled={page * 30 >= total} onClick={() => load(page + 1)} className="px-3 py-1 rounded-lg border disabled:opacity-40">Далее</button>
           </div>
         </div>
       )}
@@ -296,10 +296,10 @@ function ChatsTab() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
-                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Chat</th>
-                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Type</th>
-                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Members</th>
-                <th className="text-right px-4 py-2.5 text-xs text-gray-500 font-medium">Actions</th>
+                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Чат</th>
+                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Тип</th>
+                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Участники</th>
+                <th className="text-right px-4 py-2.5 text-xs text-gray-500 font-medium">Действия</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -309,7 +309,7 @@ function ChatsTab() {
                     <div className="flex items-center gap-2">
                       <Avatar src={c.avatarUrl} name={c.name || 'Chat'} size={32} />
                       <div className="flex items-center gap-1">
-                        <span className="font-medium text-gray-900 dark:text-white">{c.name || 'Private chat'}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{c.name || 'Личный чат'}</span>
                         {c.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-tg-blue" />}
                       </div>
                     </div>
@@ -319,7 +319,7 @@ function ChatsTab() {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => handleVerify(c.id, !c.isVerified)}
-                      title={c.isVerified ? 'Unverify' : 'Verify'}
+                      title={c.isVerified ? 'Снять верификацию' : 'Верифицировать'}
                       className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 hover:text-tg-blue transition-colors float-right"
                     >
                       <CheckCircle2 className="w-4 h-4" />
@@ -359,11 +359,11 @@ function LogsTab() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
-                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Admin</th>
-                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Action</th>
-                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Target</th>
-                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium hidden md:table-cell">Reason</th>
-                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Time</th>
+                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Администратор</th>
+                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Действие</th>
+                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Объект</th>
+                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium hidden md:table-cell">Причина</th>
+                <th className="text-left px-4 py-2.5 text-xs text-gray-500 font-medium">Время</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">

@@ -47,7 +47,7 @@ export function MessageBubble({ message, isOwn, showAvatar, showSenderName, curr
     return (
       <div className="flex justify-center my-1">
         <span className="text-xs text-gray-500 dark:text-gray-400 bg-black/10 dark:bg-white/10 px-3 py-1 rounded-full">
-          Message deleted
+          Сообщение удалено
         </span>
       </div>
     );
@@ -82,7 +82,7 @@ export function MessageBubble({ message, isOwn, showAvatar, showSenderName, curr
         {message.selfDestructAt && (
           <div className="flex items-center gap-1 text-xs text-orange-500 mb-0.5">
             <Timer className="w-3 h-3" />
-            <span>Self-destructs</span>
+            <span>Самоуничтожится</span>
           </div>
         )}
 
@@ -101,7 +101,7 @@ export function MessageBubble({ message, isOwn, showAvatar, showSenderName, curr
                 <CheckCircle2 className="w-3 h-3 text-tg-blue flex-shrink-0" />
               )}
               {(message.sender as any).isBot && (
-                <span className="bg-tg-blue/10 text-tg-blue text-[9px] px-1 py-0.5 rounded font-medium">BOT</span>
+                <span className="bg-tg-blue/10 text-tg-blue text-[9px] px-1 py-0.5 rounded font-medium">БОТ</span>
               )}
             </div>
           )}
@@ -136,7 +136,7 @@ export function MessageBubble({ message, isOwn, showAvatar, showSenderName, curr
               <p className="text-[15px] leading-snug whitespace-pre-wrap break-words">
                 {content}
                 {message.isEdited && (
-                  <span className="text-[10px] text-gray-400 ml-1">(edited)</span>
+                  <span className="text-[10px] text-gray-400 ml-1">(изменено)</span>
                 )}
               </p>
             );
@@ -207,7 +207,7 @@ export function MessageBubble({ message, isOwn, showAvatar, showSenderName, curr
       <button
         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
         className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 self-center"
-        title="React"
+        title="Реакция"
       >
         <span className="text-base">😊</span>
       </button>
@@ -256,14 +256,14 @@ function MessageActions({ message, isOwn, onClose, onReply, onDelete, onEdit, on
           ))}
         </div>
 
-        <ActionItem icon={<Reply className="w-4 h-4" />} label="Reply" onClick={onReply} />
-        <ActionItem icon={<Forward className="w-4 h-4" />} label="Forward" onClick={onClose} />
+        <ActionItem icon={<Reply className="w-4 h-4" />} label="Ответить" onClick={onReply} />
+        <ActionItem icon={<Forward className="w-4 h-4" />} label="Переслать" onClick={onClose} />
         {isOwn && message.type === 'TEXT' && (
-          <ActionItem icon={<Edit3 className="w-4 h-4" />} label="Edit" onClick={onEdit} />
+          <ActionItem icon={<Edit3 className="w-4 h-4" />} label="Редактировать" onClick={onEdit} />
         )}
         <ActionItem
           icon={<Trash2 className="w-4 h-4 text-red-500" />}
-          label={<span className="text-red-500">Delete</span>}
+          label={<span className="text-red-500">Удалить</span>}
           onClick={() => onDelete(isOwn)}
         />
       </div>

@@ -73,15 +73,15 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
           <button onClick={onClose} className="p-1 mr-2">
             <X className="w-5 h-5 text-gray-500" />
           </button>
-          <h2 className="font-semibold text-gray-900 dark:text-white flex-1">New Message</h2>
+          <h2 className="font-semibold text-gray-900 dark:text-white flex-1">Новое сообщение</h2>
         </div>
 
         {/* Tabs */}
         <div className="flex border-b border-tg-divider dark:border-gray-700">
           {[
-            { key: 'search', label: 'Direct', icon: null },
-            { key: 'create-group', label: 'Group', icon: <Users className="w-4 h-4" /> },
-            { key: 'create-channel', label: 'Channel', icon: <Megaphone className="w-4 h-4" /> },
+            { key: 'search', label: 'Личный', icon: null },
+            { key: 'create-group', label: 'Группа', icon: <Users className="w-4 h-4" /> },
+            { key: 'create-channel', label: 'Канал', icon: <Megaphone className="w-4 h-4" /> },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -104,7 +104,7 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
               type="text"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              placeholder={mode === 'create-channel' ? 'Channel name' : 'Group name'}
+              placeholder={mode === 'create-channel' ? 'Название канала' : 'Название группы'}
               className="tg-input border border-tg-divider dark:border-gray-600 mb-3"
             />
           )}
@@ -116,7 +116,7 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search users..."
+              placeholder="Поиск пользователей..."
               className="tg-input border border-tg-divider dark:border-gray-600 pl-9"
             />
           </div>
@@ -174,7 +174,7 @@ export function NewChatModal({ onClose }: NewChatModalProps) {
               disabled={isLoading}
               className="btn-primary w-full"
             >
-              {isLoading ? 'Creating...' : `Create ${mode === 'create-channel' ? 'Channel' : 'Group'} (${selectedUsers.length})`}
+              {isLoading ? 'Создание...' : `Создать ${mode === 'create-channel' ? 'канал' : 'группу'} (${selectedUsers.length})`}
             </button>
           </div>
         )}

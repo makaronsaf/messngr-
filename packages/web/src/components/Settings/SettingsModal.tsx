@@ -30,10 +30,10 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                 </button>
               )}
               <h2 className="font-semibold text-gray-900 dark:text-white">
-                {tab === 'menu'     ? 'Settings'
-                : tab === '2fa'     ? 'Two-Factor Auth'
-                : tab === 'sessions' ? 'Active Sessions'
-                : 'Privacy'}
+                {tab === 'menu'      ? 'Настройки'
+                : tab === '2fa'     ? 'Двухфакторная аутентификация'
+                : tab === 'sessions' ? 'Активные сессии'
+                : 'Конфиденциальность'}
               </h2>
             </div>
             <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -47,20 +47,20 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
               <div className="p-4 space-y-2">
                 <MenuItem
                   icon={<Shield className="w-5 h-5 text-tg-blue" />}
-                  label="Two-Factor Authentication"
-                  description="Add an extra layer of security"
+                  label="Двухфакторная аутентификация"
+                  description="Дополнительный уровень защиты"
                   onClick={() => setTab('2fa')}
                 />
                 <MenuItem
                   icon={<Lock className="w-5 h-5 text-purple-500" />}
-                  label="Privacy Settings"
-                  description="Control who can see your info"
+                  label="Конфиденциальность"
+                  description="Управление видимостью профиля"
                   onClick={() => setTab('privacy')}
                 />
                 <MenuItem
                   icon={<Monitor className="w-5 h-5 text-green-500" />}
-                  label="Active Sessions"
-                  description="Manage logged-in devices"
+                  label="Активные сессии"
+                  description="Управление подключёнными устройствами"
                   onClick={() => setTab('sessions')}
                 />
               </div>

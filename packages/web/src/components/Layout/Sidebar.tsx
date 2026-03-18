@@ -71,10 +71,10 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
   };
 
   const tabs: { key: FolderTab; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'unread', label: 'Unread' },
-    { key: 'groups', label: 'Groups' },
-    { key: 'channels', label: 'Channels' },
+    { key: 'all', label: 'Все' },
+    { key: 'unread', label: 'Непрочит.' },
+    { key: 'groups', label: 'Группы' },
+    { key: 'channels', label: 'Каналы' },
   ];
 
   return (
@@ -108,7 +108,7 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
           <button
             onClick={() => setShowNewChat(true)}
             className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="New chat"
+            title="Новый чат"
           >
             <Edit className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
@@ -123,7 +123,7 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search chats..."
+            placeholder="Поиск чатов..."
             className="tg-input pl-9 text-sm w-full border border-tg-divider dark:border-gray-600"
           />
         </div>
@@ -164,10 +164,10 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
             </div>
             <div className="flex-1 min-w-0">
               <div className={`font-medium text-[15px] ${savedChatId === activeChatId ? 'text-tg-blue' : 'text-gray-900 dark:text-white'}`}>
-                Saved Messages
+                Избранное
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                Your private space
+                Личное пространство
               </div>
             </div>
           </button>
@@ -181,7 +181,7 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
 
         {!isLoadingChats && filteredChats.length === 0 && (
           <div className="text-center py-12 text-gray-400 text-sm">
-            {search ? 'No chats found' : activeTab !== 'all' ? `No ${activeTab} chats` : 'No chats yet'}
+            {search ? 'Чаты не найдены' : activeTab !== 'all' ? 'Нет чатов в этой категории' : 'Нет чатов'}
           </div>
         )}
 
@@ -203,14 +203,14 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
           className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-sm"
         >
           <UserCircle className="w-4 h-4" />
-          Edit Profile
+          Редактировать профиль
         </button>
         <button
           onClick={() => setShowSettings(true)}
           className="flex items-center gap-3 w-full px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-sm"
         >
           <Settings className="w-4 h-4" />
-          Settings
+          Настройки
         </button>
         {(user as any)?.isAdmin && (
           <button
@@ -218,7 +218,7 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
             className="flex items-center gap-3 w-full px-4 py-3 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors text-sm"
           >
             <ShieldCheck className="w-4 h-4" />
-            Admin Panel
+            Панель администратора
           </button>
         )}
         <button
@@ -226,7 +226,7 @@ export function Sidebar({ onChatSelect }: SidebarProps) {
           className="flex items-center gap-3 w-full px-4 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm"
         >
           <LogOut className="w-4 h-4" />
-          Sign out
+          Выйти
         </button>
       </div>
 

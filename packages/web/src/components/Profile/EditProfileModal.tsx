@@ -31,9 +31,9 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
   };
 
   const handleSave = async () => {
-    if (!displayName.trim()) { setError('Display name is required'); return; }
+    if (!displayName.trim()) { setError('Имя обязательно'); return; }
     if (username && !/^[a-zA-Z0-9_]{3,32}$/.test(username)) {
-      setError('Username must be 3–32 chars, letters/numbers/underscore only');
+      setError('Имя пользователя: 3–32 символа, только буквы/цифры/_');
       return;
     }
 
@@ -73,7 +73,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
-            <h2 className="font-semibold text-gray-900 dark:text-white text-lg">Edit Profile</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-white text-lg">Редактировать профиль</h2>
             <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
               <X className="w-5 h-5 text-gray-500" />
             </button>
@@ -107,7 +107,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
             {/* Display name */}
             <div>
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-                Display name
+                Имя
               </label>
               <input
                 type="text"
@@ -115,14 +115,14 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                 onChange={(e) => setDisplayName(e.target.value)}
                 maxLength={64}
                 className="w-full bg-gray-50 dark:bg-gray-800 dark:text-white rounded-xl px-4 py-2.5 outline-none text-sm border border-transparent focus:border-tg-blue transition-colors"
-                placeholder="Your name"
+                placeholder="Ваше имя"
               />
             </div>
 
             {/* Username */}
             <div>
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-                Username
+                Имя пользователя
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">@</span>
@@ -135,13 +135,13 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                   placeholder="username"
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-1">Your public link: messngr.app/@{username || 'username'}</p>
+              <p className="text-xs text-gray-400 mt-1">Ваша ссылка: messngr.app/@{username || 'username'}</p>
             </div>
 
             {/* Bio */}
             <div>
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-                Bio
+                О себе
               </label>
               <textarea
                 value={bio}
@@ -149,7 +149,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                 maxLength={500}
                 rows={3}
                 className="w-full bg-gray-50 dark:bg-gray-800 dark:text-white rounded-xl px-4 py-2.5 outline-none text-sm resize-none border border-transparent focus:border-tg-blue transition-colors"
-                placeholder="A few words about you..."
+                placeholder="Несколько слов о вас..."
               />
               <p className="text-xs text-gray-400 text-right">{bio.length}/500</p>
             </div>
@@ -157,8 +157,8 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
             {/* Public profile toggle */}
             <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3">
               <div>
-                <div className="text-sm font-medium text-gray-900 dark:text-white">Public profile</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Anyone can view your profile by username</div>
+                <div className="text-sm font-medium text-gray-900 dark:text-white">Публичный профиль</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Любой может просматривать ваш профиль по имени пользователя</div>
               </div>
               <button
                 onClick={() => setIsPublic(!isPublic)}
@@ -182,7 +182,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
               onClick={onClose}
               className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
-              Cancel
+              Отмена
             </button>
             <button
               onClick={handleSave}

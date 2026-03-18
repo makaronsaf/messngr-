@@ -33,7 +33,7 @@ export function InvitePage() {
       .then((res) => setChat(res.data))
       .catch((err) => {
         if (err?.response?.status === 404) setNotFound(true);
-        else setError('Failed to load invite');
+        else setError('Не удалось загрузить приглашение');
       })
       .finally(() => setLoading(false));
   }, [token]);
@@ -50,7 +50,7 @@ export function InvitePage() {
       await selectChat(chatId);
       navigate(`/chat/${chatId}`);
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to join chat');
+      setError(err?.response?.data?.error || 'Не удалось вступить в чат');
     } finally {
       setJoining(false);
     }
@@ -71,15 +71,15 @@ export function InvitePage() {
           <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto">
             <Lock className="w-8 h-8 text-red-500" />
           </div>
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Invalid Invite Link</h1>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Неверная ссылка</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            This invite link is invalid or has expired.
+            Ссылка недействительна или устарела.
           </p>
           <button
             onClick={() => navigate('/')}
             className="w-full py-3 rounded-xl bg-tg-blue text-white font-medium hover:bg-tg-blue/90"
           >
-            Go to Messngr
+            Открыть Messngr
           </button>
         </div>
       </div>
@@ -109,10 +109,10 @@ export function InvitePage() {
               ? <Globe className="w-3.5 h-3.5" />
               : <Lock className="w-3.5 h-3.5" />
             }
-            <span className="capitalize">{chat?.type?.toLowerCase()}</span>
+            <span>{chat?.type === 'GROUP' ? 'Группа' : chat?.type === 'CHANNEL' ? 'Канал' : 'Чат'}</span>
             <span>·</span>
             <Users className="w-3.5 h-3.5" />
-            <span>{chat?.memberCount} members</span>
+            <span>{chat?.memberCount} участников</span>
           </div>
         </div>
 
@@ -133,11 +133,11 @@ export function InvitePage() {
             disabled={joining}
             className="w-full py-3 rounded-xl bg-tg-blue text-white font-medium hover:bg-tg-blue/90 disabled:opacity-50 transition-colors"
           >
-            {joining ? 'Joining…' : authToken ? 'Join Chat' : 'Sign in to Join'}
+            {joining ? 'Вступление...' : authToken ? 'Вступить' : 'Войти и вступить'}
           </button>
 
           <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-            By joining you agree to the community guidelines.
+            Вступая, вы соглашаетесь с правилами сообщества.
           </p>
         </div>
       </div>

@@ -14,7 +14,7 @@ export function IncomingCallModal() {
           </div>
           <h3 className="font-semibold text-lg">{incomingCall.callerName}</h3>
           <p className="text-gray-400 text-sm mt-0.5">
-            Incoming {incomingCall.type.toLowerCase()} call...
+            Входящий {incomingCall.type === 'VIDEO' ? 'видео' : 'аудио'}звонок...
           </p>
         </div>
 

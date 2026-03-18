@@ -44,13 +44,13 @@ export function ChatWindow({ onBack }: ChatWindowProps) {
     : null;
 
   const statusText = typing.length > 0
-    ? `${typing.map((t) => t.displayName).join(', ')} ${typing.length === 1 ? 'is' : 'are'} typing...`
+    ? `${typing.map((t) => t.displayName).join(', ')} ${typing.length === 1 ? 'печатает' : 'печатают'}...`
     : otherMember?.user.status === 'ONLINE'
-    ? 'online'
+    ? 'в сети'
     : otherMember?.user.lastSeen
-    ? `last seen ${new Date(otherMember.user.lastSeen).toLocaleString()}`
+    ? `был(а) в сети ${new Date(otherMember.user.lastSeen).toLocaleString('ru')}`
     : activeChat.type !== 'PRIVATE'
-    ? `${activeChat.members?.length || 0} members`
+    ? `${activeChat.members?.length || 0} участников`
     : '';
 
   return (
@@ -85,14 +85,14 @@ export function ChatWindow({ onBack }: ChatWindowProps) {
               <button
                 onClick={() => initiateCall(activeChat.id, 'AUDIO')}
                 className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                title="Audio call"
+                title="Аудиозвонок"
               >
                 <Phone className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
               <button
                 onClick={() => initiateCall(activeChat.id, 'VIDEO')}
                 className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                title="Video call"
+                title="Видеозвонок"
               >
                 <Video className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
@@ -121,7 +121,7 @@ export function ChatWindow({ onBack }: ChatWindowProps) {
       {(activeChat as any).isSavedMessages && (
         <div className="flex items-center gap-2 px-4 py-2 bg-tg-blue/5 border-b border-tg-divider dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
           <Bookmark className="w-3.5 h-3.5 text-tg-blue" />
-          Your private space — save messages, links, and notes here
+          Ваше личное пространство — сохраняйте сообщения, ссылки и заметки
         </div>
       )}
 

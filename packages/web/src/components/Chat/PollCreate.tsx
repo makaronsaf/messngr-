@@ -32,9 +32,9 @@ export function PollCreate({ chatId, onClose }: PollCreateProps) {
   };
 
   const handleSubmit = async () => {
-    if (!question.trim()) { setError('Question is required'); return; }
+    if (!question.trim()) { setError('Вопрос обязателен'); return; }
     const validOptions = options.map((o) => o.trim()).filter(Boolean);
-    if (validOptions.length < 2) { setError('At least 2 options required'); return; }
+    if (validOptions.length < 2) { setError('Нужно минимум 2 варианта ответа'); return; }
 
     setIsSubmitting(true);
     setError('');
@@ -63,7 +63,7 @@ export function PollCreate({ chatId, onClose }: PollCreateProps) {
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center gap-2">
               <BarChart2 className="w-5 h-5 text-tg-blue" />
-              <h2 className="font-semibold text-gray-900 dark:text-white">New Poll</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-white">Новый опрос</h2>
             </div>
             <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
               <X className="w-5 h-5 text-gray-500" />
@@ -74,7 +74,7 @@ export function PollCreate({ chatId, onClose }: PollCreateProps) {
             {/* Question */}
             <div>
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-                Question
+                Вопрос
               </label>
               <textarea
                 value={question}
@@ -83,14 +83,14 @@ export function PollCreate({ chatId, onClose }: PollCreateProps) {
                 rows={2}
                 autoFocus
                 className="w-full bg-gray-50 dark:bg-gray-800 dark:text-white rounded-xl px-4 py-2.5 outline-none text-sm resize-none border border-transparent focus:border-tg-blue transition-colors"
-                placeholder="Ask a question..."
+                placeholder="Задайте вопрос..."
               />
             </div>
 
             {/* Options */}
             <div>
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
-                Options
+                Варианты ответа
               </label>
               <div className="space-y-2">
                 {options.map((opt, idx) => (
@@ -100,7 +100,7 @@ export function PollCreate({ chatId, onClose }: PollCreateProps) {
                       value={opt}
                       onChange={(e) => updateOption(idx, e.target.value)}
                       maxLength={100}
-                      placeholder={`Option ${idx + 1}`}
+                      placeholder={`Вариант ${idx + 1}`}
                       className="flex-1 bg-gray-50 dark:bg-gray-800 dark:text-white rounded-xl px-4 py-2.5 outline-none text-sm border border-transparent focus:border-tg-blue transition-colors"
                     />
                     {options.length > 2 && (
@@ -121,7 +121,7 @@ export function PollCreate({ chatId, onClose }: PollCreateProps) {
                   className="mt-2 flex items-center gap-2 text-sm text-tg-blue hover:underline"
                 >
                   <Plus className="w-4 h-4" />
-                  Add option
+                  Добавить вариант
                 </button>
               )}
             </div>
@@ -129,14 +129,14 @@ export function PollCreate({ chatId, onClose }: PollCreateProps) {
             {/* Settings */}
             <div className="space-y-3 pt-1">
               <Toggle
-                label="Multiple answers"
-                description="Allow voters to choose more than one option"
+                label="Несколько ответов"
+                description="Можно выбрать более одного варианта"
                 value={isMultiple}
                 onChange={setIsMultiple}
               />
               <Toggle
-                label="Anonymous voting"
-                description="Hide who voted for what"
+                label="Анонимное голосование"
+                description="Скрыть, кто за что проголосовал"
                 value={isAnonymous}
                 onChange={setIsAnonymous}
               />
@@ -155,14 +155,14 @@ export function PollCreate({ chatId, onClose }: PollCreateProps) {
               onClick={onClose}
               className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
-              Cancel
+              Отмена
             </button>
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
               className="flex-1 py-2.5 rounded-xl bg-tg-blue text-white text-sm font-medium hover:bg-tg-blue-dark transition-colors disabled:opacity-60"
             >
-              {isSubmitting ? 'Creating...' : 'Create Poll'}
+              {isSubmitting ? 'Создание...' : 'Создать опрос'}
             </button>
           </div>
         </div>

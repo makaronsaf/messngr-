@@ -14,7 +14,7 @@ export function LoginPage() {
     try {
       await login(email, password);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Login failed');
+      setError(err.response?.data?.error || 'Ошибка входа');
     }
   };
 
@@ -37,7 +37,7 @@ export function LoginPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Messngr</h1>
-          <p className="text-tg-text-secondary text-sm mt-1">Sign in to your account</p>
+          <p className="text-tg-text-secondary text-sm mt-1">Войдите в свой аккаунт</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -48,19 +48,19 @@ export function LoginPage() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Электронная почта</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
+              placeholder="ваш@email.com"
               required
               className="tg-input border border-tg-divider"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Пароль</label>
             <input
               type="password"
               value={password}
@@ -76,7 +76,7 @@ export function LoginPage() {
             disabled={isLoading}
             className="btn-primary w-full mt-2"
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? 'Вход...' : 'Войти'}
           </button>
         </form>
 
@@ -85,7 +85,7 @@ export function LoginPage() {
             <div className="w-full border-t border-tg-divider" />
           </div>
           <div className="relative flex justify-center text-xs text-gray-400">
-            <span className="bg-white px-3">or continue with</span>
+            <span className="bg-white px-3">или войдите через</span>
           </div>
         </div>
 
@@ -114,9 +114,9 @@ export function LoginPage() {
         </div>
 
         <p className="text-center text-sm text-gray-500 mt-6">
-          Don't have an account?{' '}
+          Нет аккаунта?{' '}
           <Link to="/register" className="text-tg-blue font-medium hover:underline">
-            Register
+            Зарегистрироваться
           </Link>
         </p>
       </div>

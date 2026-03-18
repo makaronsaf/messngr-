@@ -53,10 +53,10 @@ export function SessionsPanel() {
     const d = new Date(date);
     const now = new Date();
     const diff = now.getTime() - d.getTime();
-    if (diff < 60000) return 'Just now';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-    return d.toLocaleDateString();
+    if (diff < 60000) return 'Только что';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)} мин. назад`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)} ч. назад`;
+    return d.toLocaleDateString('ru');
   };
 
   if (loading) {
@@ -71,7 +71,7 @@ export function SessionsPanel() {
 
   return (
     <div className="p-4 space-y-3">
-      {/* Current session */}
+      {/* Текущая сессия */}
       {sessions.filter((s) => s.isCurrent).map((s) => (
         <div key={s.id} className="bg-tg-blue/10 rounded-2xl p-4">
           <div className="flex items-center gap-3">
@@ -80,23 +80,23 @@ export function SessionsPanel() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-medium text-gray-900 dark:text-white text-sm">
-                {s.deviceName || 'This device'}
+                {s.deviceName || 'Это устройство'}
               </div>
               {s.ipAddress && (
                 <div className="text-xs text-gray-500 dark:text-gray-400">{s.ipAddress}</div>
               )}
-              <div className="text-xs text-tg-blue font-medium mt-0.5">Current session</div>
+              <div className="text-xs text-tg-blue font-medium mt-0.5">Текущая сессия</div>
             </div>
           </div>
         </div>
       ))}
 
-      {/* Other sessions */}
+      {/* Другие сессии */}
       {otherSessions.length > 0 && (
         <>
           <div className="flex items-center justify-between px-1">
             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Other sessions ({otherSessions.length})
+              Другие сессии ({otherSessions.length})
             </span>
             <button
               onClick={revokeAll}
@@ -104,7 +104,7 @@ export function SessionsPanel() {
               className="text-xs text-red-500 font-medium hover:text-red-600 disabled:opacity-50 flex items-center gap-1"
             >
               <LogOut className="w-3.5 h-3.5" />
-              Revoke all
+              Завершить все
             </button>
           </div>
 
@@ -115,13 +115,13 @@ export function SessionsPanel() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-gray-900 dark:text-white text-sm">
-                  {s.deviceName || 'Unknown device'}
+                  {s.deviceName || 'Неизвестное устройство'}
                 </div>
                 {s.ipAddress && (
                   <div className="text-xs text-gray-500 dark:text-gray-400">{s.ipAddress}</div>
                 )}
                 <div className="text-xs text-gray-400 mt-0.5">
-                  Active {formatDate(s.lastActive)}
+                  Активно {formatDate(s.lastActive)}
                 </div>
               </div>
               <button
@@ -138,7 +138,7 @@ export function SessionsPanel() {
 
       {otherSessions.length === 0 && (
         <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
-          No other active sessions
+          Нет других активных сессий
         </div>
       )}
     </div>

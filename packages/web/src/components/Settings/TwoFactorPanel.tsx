@@ -26,14 +26,14 @@ export function TwoFactorPanel() {
       setOtpauthUrl(res.data.otpauthUrl);
       setStep('setup');
     } catch {
-      setError('Failed to start 2FA setup');
+      setError('Не удалось начать настройку');
     } finally {
       setLoading(false);
     }
   };
 
   const handleEnable = async () => {
-    if (code.length !== 6) { setError('Enter 6-digit code'); return; }
+    if (code.length !== 6) { setError('Введите 6-значный код'); return; }
     setLoading(true);
     setError('');
     try {
@@ -42,14 +42,14 @@ export function TwoFactorPanel() {
       setStep('status');
       setCode('');
     } catch {
-      setError('Invalid code. Try again.');
+      setError('Неверный код. Попробуйте ещё раз.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDisable = async () => {
-    if (code.length !== 6) { setError('Enter 6-digit code'); return; }
+    if (code.length !== 6) { setError('Введите 6-значный код'); return; }
     setLoading(true);
     setError('');
     try {
@@ -58,7 +58,7 @@ export function TwoFactorPanel() {
       setStep('status');
       setCode('');
     } catch {
-      setError('Invalid code. Try again.');
+      setError('Неверный код. Попробуйте ещё раз.');
     } finally {
       setLoading(false);
     }
@@ -75,10 +75,10 @@ export function TwoFactorPanel() {
       <div className="p-5 space-y-5">
         <div className="bg-tg-blue/10 rounded-xl p-4 space-y-3">
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            1. Open your authenticator app (Google Authenticator, Authy, etc.)
+            1. Откройте приложение-аутентификатор (Google Authenticator, Authy и т. д.)
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            2. Add a new account and enter this secret key manually:
+            2. Добавьте новый аккаунт и введите этот секретный ключ вручную:
           </p>
           <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg px-3 py-2">
             <code className="flex-1 text-sm font-mono text-gray-800 dark:text-gray-200 break-all">{secret}</code>
@@ -87,13 +87,13 @@ export function TwoFactorPanel() {
             </button>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 break-all">
-            Or use this URL: <span className="font-mono text-[10px]">{otpauthUrl}</span>
+            Или используйте этот URL: <span className="font-mono text-[10px]">{otpauthUrl}</span>
           </p>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            3. Enter the 6-digit code to confirm
+            3. Введите 6-значный код для подтверждения
           </label>
           <input
             type="text"
@@ -112,14 +112,14 @@ export function TwoFactorPanel() {
             onClick={() => { setStep('status'); setCode(''); setError(''); }}
             className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
-            Cancel
+            Отмена
           </button>
           <button
             onClick={handleEnable}
             disabled={loading || code.length !== 6}
             className="flex-1 py-2.5 rounded-xl bg-tg-blue text-white text-sm font-medium hover:bg-tg-blue/90 disabled:opacity-50"
           >
-            {loading ? 'Verifying…' : 'Enable 2FA'}
+            {loading ? 'Проверка...' : 'Включить 2FA'}
           </button>
         </div>
       </div>
@@ -131,7 +131,7 @@ export function TwoFactorPanel() {
       <div className="p-5 space-y-5">
         <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4">
           <p className="text-sm text-red-700 dark:text-red-400">
-            Enter your current authenticator code to disable two-factor authentication.
+            Введите текущий код из приложения-аутентификатора для отключения двухфакторной аутентификации.
           </p>
         </div>
         <div>
@@ -151,14 +151,14 @@ export function TwoFactorPanel() {
             onClick={() => { setStep('status'); setCode(''); setError(''); }}
             className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
-            Cancel
+            Отмена
           </button>
           <button
             onClick={handleDisable}
             disabled={loading || code.length !== 6}
             className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50"
           >
-            {loading ? 'Disabling…' : 'Disable 2FA'}
+            {loading ? 'Отключение...' : 'Отключить 2FA'}
           </button>
         </div>
       </div>
@@ -174,12 +174,12 @@ export function TwoFactorPanel() {
         }
         <div>
           <div className={`font-semibold ${enabled ? 'text-green-700 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}`}>
-            {enabled ? '2FA is enabled' : '2FA is disabled'}
+            {enabled ? '2FA включена' : '2FA отключена'}
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             {enabled
-              ? 'Your account is protected with a time-based one-time password.'
-              : 'Add an extra layer of security to your account.'}
+              ? 'Ваш аккаунт защищён одноразовым паролем.'
+              : 'Добавьте дополнительный уровень защиты к своему аккаунту.'}
           </p>
         </div>
       </div>
@@ -190,7 +190,7 @@ export function TwoFactorPanel() {
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
         >
           <ShieldOff className="w-4 h-4" />
-          Disable Two-Factor Auth
+          Отключить двухфакторную аутентификацию
         </button>
       ) : (
         <button
@@ -199,12 +199,12 @@ export function TwoFactorPanel() {
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-tg-blue text-white font-medium hover:bg-tg-blue/90 transition-colors disabled:opacity-50"
         >
           <Shield className="w-4 h-4" />
-          {loading ? 'Loading…' : 'Set up Two-Factor Auth'}
+          {loading ? 'Загрузка...' : 'Настроить двухфакторную аутентификацию'}
         </button>
       )}
 
       <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-        Uses time-based one-time passwords (TOTP) compatible with Google Authenticator, Authy, and similar apps.
+        Использует одноразовые пароли на основе времени (TOTP), совместимые с Google Authenticator, Authy и другими приложениями.
       </p>
     </div>
   );

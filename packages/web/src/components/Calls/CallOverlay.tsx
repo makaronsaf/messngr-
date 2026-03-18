@@ -68,7 +68,7 @@ export function CallOverlay() {
             </div>
             <h2 className="text-white text-xl font-semibold">{activeCall.callerName || 'Unknown'}</h2>
             <p className="text-gray-400 mt-1">
-              {activeCall.status === 'ringing' ? 'Calling...' : formatTime(callDuration)}
+              {activeCall.status === 'ringing' ? 'Звоним...' : formatTime(callDuration)}
             </p>
           </div>
         </div>
@@ -98,7 +98,7 @@ export function CallOverlay() {
 
         <div className="text-center">
           <p className="text-white/70 text-xs">
-            {activeCall.type === 'AUDIO' ? 'Audio call' : 'Video call'}
+            {activeCall.type === 'AUDIO' ? 'Аудиозвонок' : 'Видеозвонок'}
           </p>
         </div>
 
@@ -109,7 +109,7 @@ export function CallOverlay() {
       <div className="relative z-10 mt-auto pb-16 flex items-center justify-center gap-6">
         <CallButton
           icon={activeCall.isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-          label={activeCall.isMuted ? 'Unmute' : 'Mute'}
+          label={activeCall.isMuted ? 'Включить микр.' : 'Выключить микр.'}
           onClick={toggleMute}
           active={activeCall.isMuted}
         />
@@ -117,7 +117,7 @@ export function CallOverlay() {
         {activeCall.type === 'VIDEO' && (
           <CallButton
             icon={activeCall.isVideoOn ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
-            label={activeCall.isVideoOn ? 'Camera off' : 'Camera on'}
+            label={activeCall.isVideoOn ? 'Камера выкл.' : 'Камера вкл.'}
             onClick={toggleVideo}
             active={!activeCall.isVideoOn}
           />

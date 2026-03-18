@@ -89,7 +89,7 @@ export function PollMessage({ messageId, pollId, question, initialPoll, isOwn }:
     return (
       <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
         <BarChart2 className="w-4 h-4 animate-pulse" />
-        <span>{question || 'Poll'}</span>
+        <span>{question || 'Опрос'}</span>
       </div>
     );
   }
@@ -111,9 +111,9 @@ export function PollMessage({ messageId, pollId, question, initialPoll, isOwn }:
         <div>
           <p className="font-semibold text-[14px] leading-snug">{poll.question}</p>
           <p className="text-xs text-gray-400 mt-0.5">
-            {poll.isAnonymous ? 'Anonymous' : 'Public'} poll
-            {poll.isMultiple && ' · Multiple answers'}
-            {poll.isClosed && ' · Closed'}
+            {poll.isAnonymous ? 'Анонимный' : 'Публичный'} опрос
+            {poll.isMultiple && ' · Несколько ответов'}
+            {poll.isClosed && ' · Завершён'}
           </p>
         </div>
       </div>
@@ -182,9 +182,9 @@ export function PollMessage({ messageId, pollId, question, initialPoll, isOwn }:
       <div className="mt-3 flex items-center justify-between">
         <span className="text-xs text-gray-400">
           {poll.isClosed ? (
-            <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> Closed</span>
+            <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> Завершён</span>
           ) : (
-            `${totalVotes} vote${totalVotes !== 1 ? 's' : ''}`
+            `${totalVotes} ${totalVotes === 1 ? 'голос' : totalVotes >= 2 && totalVotes <= 4 ? 'голоса' : 'голосов'}`
           )}
         </span>
 
@@ -194,7 +194,7 @@ export function PollMessage({ messageId, pollId, question, initialPoll, isOwn }:
             disabled={selected.length === 0 || isVoting}
             className="text-xs font-medium text-tg-blue disabled:opacity-40 hover:underline"
           >
-            {isVoting ? 'Voting...' : 'Vote'}
+            {isVoting ? 'Голосование...' : 'Проголосовать'}
           </button>
         )}
       </div>

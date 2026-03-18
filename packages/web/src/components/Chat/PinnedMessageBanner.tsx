@@ -27,11 +27,11 @@ export function PinnedMessageBanner({ pinnedMessages, onScrollTo }: PinnedMessag
 
   const preview = msg.type === 'TEXT'
     ? (msg.content || '').substring(0, 80)
-    : msg.type === 'IMAGE' ? '📷 Photo'
-    : msg.type === 'VIDEO' ? '🎬 Video'
-    : msg.type === 'VOICE' ? '🎤 Voice message'
-    : msg.type === 'FILE'  ? '📎 File'
-    : msg.type === 'POLL'  ? '📊 Poll'
+    : msg.type === 'IMAGE' ? '📷 Фото'
+    : msg.type === 'VIDEO' ? '🎬 Видео'
+    : msg.type === 'VOICE' ? '🎤 Голосовое сообщение'
+    : msg.type === 'FILE'  ? '📎 Файл'
+    : msg.type === 'POLL'  ? '📊 Опрос'
     : `[${msg.type}]`;
 
   const handleClick = () => {
@@ -51,7 +51,7 @@ export function PinnedMessageBanner({ pinnedMessages, onScrollTo }: PinnedMessag
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="text-[11px] font-semibold text-tg-blue">
-            Pinned Message{pinnedMessages.length > 1 ? ` ${currentIdx + 1}/${pinnedMessages.length}` : ''}
+            Закреплённое сообщение{pinnedMessages.length > 1 ? ` ${currentIdx + 1}/${pinnedMessages.length}` : ''}
           </span>
         </div>
         <p className="text-xs text-gray-600 dark:text-gray-300 truncate">{preview}</p>

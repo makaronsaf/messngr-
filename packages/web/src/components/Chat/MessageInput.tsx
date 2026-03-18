@@ -361,35 +361,35 @@ export function MessageInput({ chatId }: MessageInputProps) {
                   onClick={() => { fileInputRef.current?.setAttribute('accept', 'image/*'); fileInputRef.current?.click(); setShowAttach(false); }}
                 >
                   <Image className="w-5 h-5 text-tg-blue" />
-                  <span>Photo or Video</span>
+                  <span>Фото или видео</span>
                 </button>
                 <button
                   className="flex items-center gap-3 w-full px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
                   onClick={() => { fileInputRef.current?.setAttribute('accept', '*/*'); fileInputRef.current?.click(); setShowAttach(false); }}
                 >
                   <FileText className="w-5 h-5 text-tg-green" />
-                  <span>File</span>
+                  <span>Файл</span>
                 </button>
                 <button
                   className="flex items-center gap-3 w-full px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
                   onClick={() => { startVideoNote(); setShowAttach(false); }}
                 >
                   <Video className="w-5 h-5 text-tg-red" />
-                  <span>Video Message</span>
+                  <span>Видеосообщение</span>
                 </button>
                 <button
                   className="flex items-center gap-3 w-full px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
                   onClick={() => { setShowPollCreate(true); setShowAttach(false); }}
                 >
                   <BarChart2 className="w-5 h-5 text-purple-500" />
-                  <span>Poll</span>
+                  <span>Опрос</span>
                 </button>
                 <button
                   className="flex items-center gap-3 w-full px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm"
                   onClick={() => { setShowSchedule(!showSchedule); setShowAttach(false); }}
                 >
                   <Clock className="w-5 h-5 text-orange-500" />
-                  <span>Schedule Message</span>
+                  <span>Отложить отправку</span>
                 </button>
               </div>
             </>
@@ -402,7 +402,7 @@ export function MessageInput({ chatId }: MessageInputProps) {
           value={text}
           onChange={handleTextChange}
           onKeyDown={handleKeyDown}
-          placeholder="Message"
+          placeholder="Сообщение"
           rows={1}
           className="flex-1 bg-tg-bg-secondary dark:bg-gray-800 dark:text-white rounded-2xl px-4 py-2.5 outline-none text-sm resize-none placeholder:text-gray-400 max-h-32 overflow-y-auto"
           style={{ lineHeight: '1.4' }}
@@ -422,7 +422,7 @@ export function MessageInput({ chatId }: MessageInputProps) {
             onMouseDown={startVoiceRecording}
             onTouchStart={startVoiceRecording}
             className="w-10 h-10 bg-tg-blue rounded-full flex items-center justify-center text-white hover:bg-tg-blue-dark transition-colors flex-shrink-0 mb-0.5"
-            title="Hold to record voice"
+            title="Удерживайте для записи"
           >
             <Mic className="w-4 h-4" />
           </button>
@@ -433,7 +433,7 @@ export function MessageInput({ chatId }: MessageInputProps) {
       {showSchedule && (
         <div className="flex items-center gap-2 px-4 py-2 border-t border-tg-divider dark:border-gray-700 bg-orange-50 dark:bg-orange-900/20">
           <Clock className="w-4 h-4 text-orange-500 flex-shrink-0" />
-          <span className="text-xs text-orange-700 dark:text-orange-300 flex-shrink-0">Send at:</span>
+          <span className="text-xs text-orange-700 dark:text-orange-300 flex-shrink-0">Отправить:</span>
           <input
             type="datetime-local"
             value={scheduledAt}
