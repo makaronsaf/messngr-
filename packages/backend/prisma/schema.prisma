@@ -1,0 +1,414 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  username          String    @unique
+  displayName       String
+  email             String?   @unique
+  phone             String?   @unique
+  passwordHash      String?
+  avatarUrl         String?
+  bio               String?
+  status            UserStatus @default(OFFLINE)
+  lastSeen          DateTime?
+  isVerified        Boolean   @default(false)
+  isBot             Boolean   @default(false)
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+
+  // E2E encryption keys
+  identityPublicKey String?   // X3DH identity key (public)
+  signedPreKey      String?   // JSON: {keyId, publicKey, signature}
+  oneTimePreKeys    String[]  // Array of serialized one-time pre-keys
+
+  // OAuth
+  googleId          String?   @unique
+  githubId          String?   @unique
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  // Relations
+  sentMessages      Message[]           @relation("SentMessages")
+  chatMembers       ChatMember[]
+  sessions          Session[]
+  stories           Story[]
+  storyViews        StoryView[]
+  reactions         MessageReaction[]
+  calls             CallParticipant[]
+  notifications     Notification[]
+  blockedUsers      UserBlock[]         @relation("Blocker")
+  blockedByUsers    UserBlock[]         @relation("Blocked")
+  contacts          Contact[]           @relation("UserContacts")
+  contactOf         Contact[]           @relation("ContactUser")
+
+  @@map("users")
+}
+
+enum UserStatus {
+  ONLINE
+  OFFLINE
+  AWAY
+  DO_NOT_DISTURB
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  token        String   @unique
+  deviceInfo   String?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Chat {
+  id          String    @id @default(uuid())
+  type        ChatType
+  name        String?
+  description String?
+  avatarUrl   String?
+  isPublic    Boolean   @default(false)
+  username    String?   @unique // for channels/public groups
+
+  // Settings
+  slowMode    Int?      // seconds between messages
+  isVerified  Boolean   @default(false) // verified channel badge
+
+  // E2E - only for private chats
+  encryptionEnabled Boolean @default(false)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  messages    Message[]
+  members     ChatMember[]
+  calls       Call[]
+  pinnedMessages PinnedMessage[]
+
+  @@map("chats")
+}
+
+enum ChatType {
+  PRIVATE     // 1:1
+  GROUP       // group chat
+  CHANNEL     // broadcast channel
+}
+
+model ChatMember {
+  id       String          @id @default(uuid())
+  chatId   String
+  userId   String
+  role     ChatMemberRole  @default(MEMBER)
+
+  // Notification settings
+  isMuted         Boolean  @default(false)
+  mutedUntil      DateTime?
+  isPinned        Boolean  @default(false)
+
+  // Read tracking
+  lastReadMessageId String?
+  lastReadAt        DateTime?
+
+  joinedAt DateTime @default(now())
+  leftAt   DateTime?
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatId, userId])
+  @@map("chat_members")
+}
+
+enum ChatMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+  RESTRICTED
+}
+
+model Message {
+  id          String      @id @default(uuid())
+  chatId      String
+  senderId    String
+  type        MessageType @default(TEXT)
+
+  // Content (encrypted for E2E chats)
+  content     String?     // text content (may be encrypted)
+  iv          String?     // AES-GCM IV for encrypted messages
+
+  // Media
+  mediaUrl    String?
+  mediaType   String?
+  mediaSize   Int?
+  mediaDuration Int?      // seconds for audio/video
+  mediaThumbnail String?  // base64 thumbnail
+  mediaWidth  Int?
+  mediaHeight Int?
+
+  // Voice/Video specific
+  waveform    Float[]     // audio waveform data
+
+  // Forwarded from
+  forwardedFromChatId    String?
+  forwardedFromMessageId String?
+  forwardedFromUserId    String?
+
+  // Reply to
+  replyToMessageId String?
+  replyToMessage   Message? @relation("MessageReplies", fields: [replyToMessageId], references: [id])
+  replies          Message[] @relation("MessageReplies")
+
+  // Self-destruct
+  selfDestructAt  DateTime?
+  selfDestructAfterRead Boolean @default(false)
+  selfDestructSeconds   Int?
+
+  // State
+  isEdited    Boolean   @default(false)
+  editedAt    DateTime?
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedFor  String[]  // user IDs for "delete for me"
+
+  // Pinned
+  isPinned    Boolean   @default(false)
+
+  sentAt      DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  sender      User      @relation("SentMessages", fields: [senderId], references: [id])
+  chat        Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  reactions   MessageReaction[]
+  readBy      MessageRead[]
+  pinnedIn    PinnedMessage[]
+
+  @@index([chatId, sentAt])
+  @@index([senderId])
+  @@map("messages")
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  VIDEO_NOTE    // Telegram video circles
+  AUDIO
+  VOICE
+  FILE
+  STICKER
+  GIF
+  LOCATION
+  CONTACT
+  POLL
+  SYSTEM
+}
+
+model MessageRead {
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
+  @@map("message_reads")
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("message_reactions")
+}
+
+model PinnedMessage {
+  chatId    String
+  messageId String
+  pinnedBy  String
+  pinnedAt  DateTime @default(now())
+
+  chat    Chat    @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, messageId])
+  @@map("pinned_messages")
+}
+
+model Story {
+  id          String    @id @default(uuid())
+  userId      String
+  type        StoryType
+  mediaUrl    String
+  mediaType   String
+  duration    Int?      // seconds
+  caption     String?
+  isPrivate   Boolean   @default(false)
+  allowedUserIds String[] // empty = all contacts
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  views StoryView[]
+
+  @@map("stories")
+}
+
+enum StoryType {
+  IMAGE
+  VIDEO
+  TEXT
+}
+
+model StoryView {
+  storyId   String
+  userId    String
+  viewedAt  DateTime @default(now())
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([storyId, userId])
+  @@map("story_views")
+}
+
+model Call {
+  id        String     @id @default(uuid())
+  chatId    String
+  type      CallType
+  status    CallStatus @default(RINGING)
+  startedAt DateTime?
+  endedAt   DateTime?
+  duration  Int?       // seconds
+  createdAt DateTime   @default(now())
+
+  chat         Chat              @relation(fields: [chatId], references: [id])
+  participants CallParticipant[]
+
+  @@map("calls")
+}
+
+enum CallType {
+  AUDIO
+  VIDEO
+}
+
+enum CallStatus {
+  RINGING
+  ACTIVE
+  ENDED
+  MISSED
+  DECLINED
+}
+
+model CallParticipant {
+  callId    String
+  userId    String
+  joinedAt  DateTime?
+  leftAt    DateTime?
+  isMuted   Boolean  @default(false)
+  isVideoOn Boolean  @default(false)
+
+  call Call @relation(fields: [callId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([callId, userId])
+  @@map("call_participants")
+}
+
+model Contact {
+  userId      String
+  contactId   String
+  nickname    String?
+  isBlocked   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user    User @relation("UserContacts", fields: [userId], references: [id], onDelete: Cascade)
+  contact User @relation("ContactUser", fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@id([userId, contactId])
+  @@map("contacts")
+}
+
+model UserBlock {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@map("user_blocks")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  MESSAGE
+  CALL
+  MENTION
+  REACTION
+  SYSTEM
+}
+
+// E2E Encryption key bundles
+model KeyBundle {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  registrationId  Int
+  identityKey     String   // base64 encoded public key
+  signedPreKey    Json     // {keyId, publicKey, signature}
+  oneTimePreKeys  Json[]   // [{keyId, publicKey}]
+  updatedAt       DateTime @updatedAt
+
+  @@map("key_bundles")
+}
+
+model E2ESession {
+  id          String   @id @default(uuid())
+  senderId    String
+  recipientId String
+  sessionData String   // encrypted session state (Double Ratchet)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([senderId, recipientId])
+  @@map("e2e_sessions")
+}

@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production
+dist/
+build/
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Docker volumes (local)
+postgres_data/
+redis_data/
+elasticsearch_data/
+
+# Uploads (don't commit files)
+packages/backend/uploads/
+
+# Prisma
+packages/backend/prisma/migrations/
+
+# React Native
+packages/mobile/android/
+packages/mobile/ios/
+packages/mobile/.gradle/
+packages/mobile/*.keystore
+packages/mobile/android/local.properties
+
+# Test coverage
+coverage/
+
+# Certificates
+nginx/ssl/
+
+# TypeScript
+*.tsbuildinfo

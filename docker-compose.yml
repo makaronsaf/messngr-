@@ -1,0 +1,146 @@
+version: '3.9'
+
+services:
+  # ─── PostgreSQL ────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: messngr_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: messngr
+      POSTGRES_PASSWORD: messngr_pass
+      POSTGRES_DB: messngr_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U messngr -d messngr_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis ────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: messngr_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Elasticsearch ────────────────────────────────────────────────────
+  elasticsearch:
+    image: elasticsearch:8.12.1
+    container_name: messngr_elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - cluster.name=messngr-cluster
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ─── COTURN (TURN server for WebRTC) ─────────────────────────────────
+  coturn:
+    image: coturn/coturn:latest
+    container_name: messngr_coturn
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./docker/coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
+    command: -c /etc/coturn/turnserver.conf
+
+  # ─── Backend ──────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./packages/backend
+      dockerfile: ../../docker/backend/Dockerfile
+    container_name: messngr_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      SOCKET_PORT: 4001
+      DATABASE_URL: postgresql://messngr:messngr_pass@postgres:5432/messngr_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production-super-secret-key}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      TURN_SERVER_URL: ${TURN_SERVER_URL:-turn:localhost:3478}
+      TURN_SECRET: ${TURN_SECRET:-messngr-turn-secret}
+      API_URL: ${API_URL:-http://localhost}
+      WEB_URL: ${WEB_URL:-http://localhost:3000}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:19006}
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "4000:4000"
+      - "4001:4001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ─── Web Frontend ─────────────────────────────────────────────────────
+  web:
+    build:
+      context: ./packages/web
+      dockerfile: ../../docker/web/Dockerfile
+      args:
+        VITE_API_URL: ${API_URL:-http://localhost:4000/api}
+        VITE_SOCKET_URL: ${SOCKET_URL:-http://localhost:4001}
+    container_name: messngr_web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  # ─── Nginx (reverse proxy) ────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: messngr_nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - web
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - uploads_data:/var/www/uploads:ro
+    ports:
+      - "80:80"
+      - "443:443"
+
+volumes:
+  postgres_data:
+  redis_data:
+  elasticsearch_data:
+  uploads_data:

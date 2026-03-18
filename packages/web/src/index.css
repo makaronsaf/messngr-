@@ -1,0 +1,206 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body, #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #000;
+    background: #EFEBE0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.35);
+  }
+
+  /* Dark mode scrollbar */
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+  }
+}
+
+@layer components {
+  /* Telegram-style message bubble */
+  .msg-bubble {
+    @apply relative max-w-[85%] rounded-[12px] px-3 py-2 shadow-msg;
+  }
+
+  .msg-bubble-out {
+    @apply bg-tg-msg-out rounded-tr-[4px];
+  }
+
+  .msg-bubble-in {
+    @apply bg-white rounded-tl-[4px];
+  }
+
+  /* Dark mode message bubbles */
+  .dark .msg-bubble-out {
+    @apply bg-tg-msg-out-dark text-white;
+  }
+
+  .dark .msg-bubble-in {
+    @apply bg-tg-msg-in-dark text-white;
+  }
+
+  /* Chat list item hover */
+  .chat-item {
+    @apply flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors duration-100;
+  }
+
+  .chat-item:hover {
+    @apply bg-gray-100;
+  }
+
+  .chat-item.active {
+    @apply bg-tg-blue text-white;
+  }
+
+  .dark .chat-item:hover {
+    @apply bg-gray-700;
+  }
+
+  /* Avatar */
+  .avatar {
+    @apply rounded-full object-cover flex-shrink-0 bg-gray-200;
+  }
+
+  /* Online dot */
+  .online-dot {
+    @apply absolute bottom-0 right-0 w-3 h-3 rounded-full bg-tg-online-dot border-2 border-white;
+  }
+
+  /* Telegram-style header */
+  .tg-header {
+    @apply flex items-center h-14 px-4 bg-white border-b border-tg-divider shadow-sm;
+  }
+
+  .dark .tg-header {
+    @apply bg-gray-900 border-gray-700;
+  }
+
+  /* Input field */
+  .tg-input {
+    @apply w-full bg-tg-bg-secondary rounded-xl px-4 py-2.5 outline-none text-sm
+           placeholder:text-tg-text-hint transition-all duration-150
+           focus:ring-2 focus:ring-tg-blue/30;
+  }
+
+  .dark .tg-input {
+    @apply bg-gray-800 text-white placeholder:text-gray-500;
+  }
+
+  /* Button */
+  .btn-primary {
+    @apply bg-tg-blue hover:bg-tg-blue-dark text-white rounded-lg px-4 py-2.5
+           font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Message time */
+  .msg-time {
+    @apply text-[10px] text-gray-400 ml-1 mt-0.5 flex items-center gap-0.5 float-right;
+  }
+
+  /* Voice message waveform */
+  .waveform-bar {
+    @apply bg-tg-blue rounded-full transition-all duration-75;
+  }
+
+  /* Video note circle */
+  .video-note {
+    @apply rounded-full overflow-hidden aspect-square;
+    width: 200px;
+    height: 200px;
+  }
+
+  /* Story ring */
+  .story-ring {
+    @apply rounded-full p-0.5;
+    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  }
+
+  .story-ring.viewed {
+    background: #ccc;
+  }
+
+  /* Mention badge */
+  .mention-badge {
+    @apply bg-tg-blue text-white text-xs font-bold rounded-full min-w-[20px] h-5
+           flex items-center justify-center px-1;
+  }
+
+  /* Typing indicator dots */
+  .typing-dot {
+    @apply w-2 h-2 bg-gray-400 rounded-full;
+    animation: typingBounce 1.4s infinite ease-in-out;
+  }
+
+  .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+  .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+}
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+}
+
+/* Dark mode sidebar */
+.dark .sidebar {
+  @apply bg-gray-900 text-white;
+}
+
+/* Animations */
+.animate-slide-up {
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Message appear animation */
+.msg-appear {
+  animation: msgAppear 0.15s ease-out;
+}
+
+@keyframes msgAppear {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Reaction popup */
+.reaction-popup {
+  animation: reactionPop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes reactionPop {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
