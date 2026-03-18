@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install
 
 # Copy source
 COPY . .
@@ -22,7 +22,7 @@ WORKDIR /app
 
 # Install only production deps
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 # Copy built files
 COPY --from=builder /app/dist ./dist
