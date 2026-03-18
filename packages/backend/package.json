@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "esbuild src/**/*.ts --outdir=dist --platform=node --format=cjs --target=es2022 --packages=external",
     "start": "node dist/index.js",
     "db:migrate": "prisma migrate deploy",
     "db:generate": "prisma generate",
@@ -53,6 +53,7 @@
     "@types/uuid": "^9.0.7",
     "prisma": "^5.8.1",
     "tsx": "^4.7.0",
+    "esbuild": "^0.20.0",
     "typescript": "^5.3.3"
   }
 }
